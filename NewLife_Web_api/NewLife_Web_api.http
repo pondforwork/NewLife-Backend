@@ -1,0 +1,6 @@
+@NewLife_Web_api_HostAddress = http://localhost:5296
+
+GET {{NewLife_Web_api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
