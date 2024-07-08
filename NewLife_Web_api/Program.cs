@@ -18,22 +18,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 var app = builder.Build();
 
-
-//using (var scope = app.Services.CreateScope())
-//{
-//    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//    try
-//    {
-//        dbContext.Database.CanConnect();
-//        app.Logger.LogInformation("Database connection successful.");
-//    }
-//    catch (Exception ex)
-//    {
-//        app.Logger.LogError(ex, "Database connection failed.");
-//    }
-//}
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
