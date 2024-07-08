@@ -6,7 +6,7 @@ namespace NewLife_Web_api.Model
     public class User
     {
         [Key]
-        [Column("user_id")] // Specify the exact column name
+        [Column("user_id")] 
         public int UserId { get; set; }
 
         [Column("profile_pic")]

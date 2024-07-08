@@ -25,7 +25,7 @@ namespace NewLife_Web_api.Controllers
 
 
         [HttpGet("{Id}")]
-        public async Task<IActionResult> GetUser(int Id)
+        public async Task<IActionResult> GetData(int Id)
         {
             var user = await _context.Users
                 .FromSqlRaw("SELECT user_id , profile_pic, `name` ,lastname , email,`password`, `role` FROM user WHERE user_id = {0}", Id)
