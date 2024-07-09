@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Pond\\Documents\\BUU\\Creative\\Backend\\NewLife-Backend\\NewLife_Web_api\\NewLife_Web_api.csproj": {}
+    "C:\\Users\\pondu\\Documents\\Buu\\Creative\\NewLife-Backend\\NewLife_Web_api\\NewLife_Web_api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Pond\\Documents\\BUU\\Creative\\Backend\\NewLife-Backend\\NewLife_Web_api\\NewLife_Web_api.csproj": {
+    "C:\\Users\\pondu\\Documents\\Buu\\Creative\\NewLife-Backend\\NewLife_Web_api\\NewLife_Web_api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Pond\\Documents\\BUU\\Creative\\Backend\\NewLife-Backend\\NewLife_Web_api\\NewLife_Web_api.csproj",
+        "projectUniqueName": "C:\\Users\\pondu\\Documents\\Buu\\Creative\\NewLife-Backend\\NewLife_Web_api\\NewLife_Web_api.csproj",
         "projectName": "NewLife_Web_api",
-        "projectPath": "C:\\Users\\Pond\\Documents\\BUU\\Creative\\Backend\\NewLife-Backend\\NewLife_Web_api\\NewLife_Web_api.csproj",
-        "packagesPath": "C:\\Users\\Pond\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Pond\\Documents\\BUU\\Creative\\Backend\\NewLife-Backend\\NewLife_Web_api\\obj\\",
+        "projectPath": "C:\\Users\\pondu\\Documents\\Buu\\Creative\\NewLife-Backend\\NewLife_Web_api\\NewLife_Web_api.csproj",
+        "packagesPath": "C:\\Users\\pondu\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\pondu\\Documents\\Buu\\Creative\\NewLife-Backend\\NewLife_Web_api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Pond\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\pondu\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [

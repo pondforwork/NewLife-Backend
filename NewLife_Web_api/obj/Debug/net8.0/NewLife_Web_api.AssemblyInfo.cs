@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NewLife_Web_api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82881443a9e8a3547cae2b124f033a30cca0ed32")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c64b5c8e8ae2940c2d166a3a4e6281c9a09c7e3a")]
 [assembly: System.Reflection.AssemblyProductAttribute("NewLife_Web_api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NewLife_Web_api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
