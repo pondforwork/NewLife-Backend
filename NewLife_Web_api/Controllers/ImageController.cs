@@ -54,6 +54,22 @@ namespace NewLife_Web_api.Controllers
             return Ok(new { image.FileName });
         }
 
+        [HttpDelete("{imageName}")]
+        public IActionResult DeleteImage(string imageName)
+        {
+            var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "Image", imageName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound("Image not found.");
+            }
+
+            System.IO.File.Delete(filePath);
+
+            return Ok(new { Message = "Image deleted successfully." });
+        }
+
+
         private string GetContentType(string path)
         {
             var extension = Path.GetExtension(path).ToLowerInvariant();
