@@ -7,25 +7,27 @@ namespace NewLife_Web_api.Model
     {
         [Key]
         [Column("user_id")] 
-        public int UserId { get; set; }
+        public int userId { get; set; }
 
         [Column("profile_pic")]
-        public string? ProfilePic { get; set; }
+        public string? profilePic { get; set; }
 
         [Column("name")]
-        public string Name { get; set; }
+        public string name { get; set; }
 
         [Column("lastname")]
-        public string LastName { get; set; }
+        public string lastName { get; set; }
 
         [Column("email")]
-        public string Email { get; set; }
+        public string email { get; set; }
 
         [Column("password")]
-        public string Password { get; set; }
+        public string password { get; set; }
 
         [Column("role")]
-        public string Role { get; set; }
+        public string role { get; set; }
+
+
     }
 
 }
