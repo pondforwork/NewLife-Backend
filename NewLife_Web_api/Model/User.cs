@@ -31,7 +31,7 @@ namespace NewLife_Web_api.Model
         public string address { get; set; }
 
         [Column("tel")]
-        public int tel{ get; set; }
+        public string tel { get; set; }
 
         [Column("gender")]
         public string gender { get; set; }

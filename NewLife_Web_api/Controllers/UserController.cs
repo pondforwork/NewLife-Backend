@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using NewLife_Web_api.Model;
+using NewLife_Web_api.Controllers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.Extensions.Hosting;
+using MySqlConnector;
 
 namespace NewLife_Web_api.Controllers
 {
@@ -10,11 +14,40 @@ namespace NewLife_Web_api.Controllers
     public class UserController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _hostEnvironment;
 
-        public UserController(ApplicationDbContext context)
+        public UserController(ApplicationDbContext context, IWebHostEnvironment hostEnvironment)
         {
             _context = context;
+            _hostEnvironment = hostEnvironment;
+
+
         }
+
+        [HttpPost("saveImage")]
+        public async Task<IActionResult> SaveImage(IFormFile image)
+        {
+            if (image == null || image.Length == 0)
+            {
+                return BadRequest("No image uploaded.");
+            }
+
+            var uploadsFolder = Path.Combine(_hostEnvironment.ContentRootPath, "Image");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            string filePath = Path.Combine(uploadsFolder, image.FileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await image.CopyToAsync(stream);
+            }
+
+            // Return the file name or file path as needed
+            return Ok(new { FileName = image.FileName });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
@@ -53,6 +86,81 @@ namespace NewLife_Web_api.Controllers
                 return StatusCode(500, "An error occurred while retrieving the user.");
             }
         }
+
+        [HttpPost("Saveuser")]
+        public async Task<IActionResult> CreateUser([FromForm] User user, IFormFile image)
+        {
+            string imageFileName = "";
+
+            try
+            {
+                // Attempt to save the image
+                var result = await SaveImage(image);
+                if (result is OkObjectResult okResult)
+                {
+                    imageFileName = (string)((dynamic)okResult.Value).FileName;
+                }
+                else
+                {
+                    return BadRequest(new { message = "Image upload failed." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Image upload failed.", error = ex.Message });
+            }
+
+            var sqlQuery = @"
+            INSERT INTO user (
+                profile_pic, `name`, lastname, email, `password`, `role`, tel, gender, age, career, 
+                num_of_fam_members, experience, size_of_residence, type_of_residence, free_time_per_day, 
+                reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5, address
+            ) 
+            VALUES (
+                @profile_pic, @name, @lastname, @email, @password, @role, @tel, @gender, @age, @career, 
+                @num_of_fam_members, @experience, @size_of_residence, @type_of_residence, @free_time_per_day, 
+                @reason_for_adoption, @interest_id_1, @interest_id_2, @interest_id_3, @interest_id_4, @interest_id_5, @address
+            )";
+
+            var parameters = new[]
+            {
+                new MySqlParameter("@profile_pic", imageFileName ?? (object)DBNull.Value),
+                new MySqlParameter("@name", user.name ?? (object)DBNull.Value),
+                new MySqlParameter("@lastname", user.lastName ?? (object)DBNull.Value),
+                new MySqlParameter("@email", user.email ?? (object)DBNull.Value),
+                new MySqlParameter("@password", user.password ?? (object)DBNull.Value),
+                new MySqlParameter("@role", user.role ?? (object)DBNull.Value),
+                new MySqlParameter("@tel", user.tel ?? (object)DBNull.Value),
+                new MySqlParameter("@gender", user.gender ?? (object)DBNull.Value),
+                new MySqlParameter("@age", user.age),
+                new MySqlParameter("@career", user.career ?? (object)DBNull.Value),
+                new MySqlParameter("@num_of_fam_members", user.numOfFamMembers),
+                new MySqlParameter("@experience", user.experience ?? (object)DBNull.Value),
+                new MySqlParameter("@size_of_residence", user.sizeOfResidence ?? (object)DBNull.Value),
+                new MySqlParameter("@type_of_residence", user.typeOfResidence ?? (object)DBNull.Value),
+                new MySqlParameter("@free_time_per_day", user.freeTimePerDay),
+                new MySqlParameter("@reason_for_adoption", user.reasonForAdoption ?? (object)DBNull.Value),
+                new MySqlParameter("@interest_id_1", user.interestId1.HasValue ? (object)user.interestId1.Value : DBNull.Value),
+                new MySqlParameter("@interest_id_2", user.interestId2.HasValue ? (object)user.interestId2.Value : DBNull.Value),
+                new MySqlParameter("@interest_id_3", user.interestId3.HasValue ? (object)user.interestId3.Value : DBNull.Value),
+                new MySqlParameter("@interest_id_4", user.interestId4.HasValue ? (object)user.interestId4.Value : DBNull.Value),
+                new MySqlParameter("@interest_id_5", user.interestId5.HasValue ? (object)user.interestId5.Value : DBNull.Value),
+                new MySqlParameter("@address", user.address ?? (object)DBNull.Value)
+            };
+
+            try
+            {
+                await _context.Database.ExecuteSqlRawAsync(sqlQuery, parameters);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "User creation failed.", error = ex.Message });
+            }
+
+            return Ok(new { message = "User created successfully." });
+        }
+
+
 
         [HttpDelete("{Id}")]
         public async Task<IActionResult> DeleteUser(int Id)
