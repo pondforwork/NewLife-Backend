@@ -54,5 +54,30 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
+        [HttpDelete("{Id}")]
+        public async Task<IActionResult> DeleteUser(int Id)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .FromSqlRaw("SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, num_of_fam_members, experience, size_of_residence, type_of_residence, free_time_per_day, reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5 FROM user WHERE user_id = {0}", Id)
+                    .FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM user WHERE user_id = {0}", Id);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while deleting the user.");
+            }
+        }
+
+
     }
 }
