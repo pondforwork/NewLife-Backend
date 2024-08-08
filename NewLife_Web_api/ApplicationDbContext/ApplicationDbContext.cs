@@ -20,8 +20,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<FavoriteAnimal> FavoriteAnimals { get; set; }
 
-
-
+    public DbSet<Interest> Interests { get; set; }
 
 
 }
