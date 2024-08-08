@@ -7,14 +7,14 @@ namespace NewLife_Web_api.Model
     {
         [Key]
         [Column("favorite_animal_id")]
-        public int favoriteAnimallId { get; set; }
+        public int favoriteAnimalId { get; set; }
 
 
         [Column("user_id")]
         public int UserId { get; set; }
 
         [Column("adoption_post_id")]
-        public int adoptionPstId { get; set; }
+        public int adoptionPostId { get; set; }
 
         [Column("date_added")]
         public DateTime dateAdded { get; set; }
