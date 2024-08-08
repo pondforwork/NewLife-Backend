@@ -18,6 +18,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<DonationChannel> DonationChannels { get; set; }
 
+    public DbSet<FavoriteAnimal> FavoriteAnimals { get; set; }
+
 
 
 

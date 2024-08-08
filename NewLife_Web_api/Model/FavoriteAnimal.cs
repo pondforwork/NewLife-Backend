@@ -17,7 +17,7 @@ namespace NewLife_Web_api.Model
         public int adoptionPstId { get; set; }
 
         [Column("date_added")]
-        public int dateAdded { get; set; }
+        public DateTime dateAdded { get; set; }
 
 
 
