@@ -34,21 +34,21 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetData(int id)
+        [HttpGet("{Id}")]
+        public async Task<IActionResult> GetData(int Id)
         {
             try
             {
-                var favoriteAnimal = await _context.FavoriteAnimals
-                    .FromSqlRaw("SELECT favorite_animal_id, user_id, adoption_post_id, date_added FROM favorite_animal WHERE favorite_animal_id = {0}", id)
+                var favoriteAnimals = await _context.FavoriteAnimals
+                    .FromSqlRaw("SELECT favorite_animal_id, user_id, adoption_post_id, date_added FROM favorite_animal WHERE favorite_animal_id = {0}", Id)
                     .FirstOrDefaultAsync();
 
-                if (favoriteAnimal == null)
+                if (favoriteAnimals == null)
                 {
                     return NotFound();
                 }
 
-                return Ok(favoriteAnimal);
+                return Ok(favoriteAnimals);
             }
             catch (Exception ex)
             {
@@ -56,6 +56,32 @@ namespace NewLife_Web_api.Controllers
                 return StatusCode(500, "An error occurred while retrieving the favorite animal.");
             }
         }
+
+
+        [HttpDelete("{Id}")]
+        public async Task<IActionResult> DeleteUser(int Id)
+        {
+            try
+            {
+                var favoriteAnimals = await _context.FavoriteAnimals
+                    .FromSqlRaw("SELECT favorite_animal_id, user_id, adoption_post_id, date_added FROM favorite_animal WHERE favorite_animal_id = {0}", Id)
+                    .FirstOrDefaultAsync();
+
+                if (favoriteAnimals == null)
+                {
+                    return NotFound("favorite animal not found.");
+                }
+
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM favorite_animal WHERE favorite_animal_id = {0}", Id);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while deleting the favorite animal.");
+            }
+        }
+
     }
 }
 

@@ -48,8 +48,33 @@ namespace NewLife_Web_api.Controllers
             catch (Exception ex)
             {
                 // Log the exception (ex) here as needed
-                return StatusCode(500, "An error occurred while retrieving the donationchannel.");
+                return StatusCode(500, "An error occurred while retrieving the donation channel.");
             }
         }
+
+        [HttpDelete("{Id}")]
+        public async Task<IActionResult> DeleteUser(int Id)
+        {
+            try
+            {
+                var donationChannels = await _context.DonationChannels
+                    .FromSqlRaw("SELECT donation_channel_id, image_url, bank_name, account_name, account_number, date_added FROM donation_channel WHERE donation_channel_id  = {0}", Id)
+                    .FirstOrDefaultAsync();
+
+                if (donationChannels == null)
+                {
+                    return NotFound("donation channel not found.");
+                }
+
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM donation_channel WHERE donation_channel_id  = {0}", Id);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while deleting the donation channel.");
+            }
+        }
+
     }
 }
