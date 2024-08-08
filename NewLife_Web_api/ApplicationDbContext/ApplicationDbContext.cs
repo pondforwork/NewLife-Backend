@@ -16,6 +16,10 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<NoficationAdoptionPost> NoficationAdoptionPosts { get; set; }
 
+    public DbSet<DonationChannel> DonationChannels { get; set; }
+
+
+
 
 
 }
