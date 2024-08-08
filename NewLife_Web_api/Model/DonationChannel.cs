@@ -11,7 +11,7 @@ namespace NewLife_Web_api.Model
         public int donationChannelId { get; set; }
 
         [Column("image_url")]
-        public string? imageuUrl { get; set; }
+        public string? imageUrl { get; set; }
 
         [Column("bank_name")]
         public string bankName { get; set; }
