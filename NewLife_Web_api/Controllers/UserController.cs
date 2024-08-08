@@ -20,7 +20,7 @@ namespace NewLife_Web_api.Controllers
         {
             try
             {
-                var users = await _context.Users.FromSqlRaw("SELECT user_id , profile_pic, `name` ,lastname , email,`password`, `role` FROM user;").ToListAsync();
+                var users = await _context.Users.FromSqlRaw("SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, num_of_fam_members, experience, size_of_residence, type_of_residence, free_time_per_day, reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5  FROM user;").ToListAsync();
                 return Ok(users);
             }
             catch (Exception ex)
@@ -37,7 +37,7 @@ namespace NewLife_Web_api.Controllers
             try
             {
                 var user = await _context.Users
-                    .FromSqlRaw("SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role` FROM user WHERE user_id = {0}", Id)
+                    .FromSqlRaw("SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, num_of_fam_members, experience, size_of_residence, type_of_residence, free_time_per_day, reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5 FROM user WHERE user_id = {0}", Id)
                     .FirstOrDefaultAsync();
 
                 if (user == null)
