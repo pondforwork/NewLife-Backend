@@ -11,43 +11,43 @@ namespace NewLife_Web_api.Model
         public int adoptionPostId { get; set; }
 
         [Column("user_id")]
-        public string userId { get; set; }
+        public int userId { get; set; }
 
-        [Column("iamge_1")]
+        [Column("image_1")]
         public string? Image1 { get; set; }
        
-        [Column("iamge_2")]
+        [Column("image_2")]
         public string? Image2 { get; set; }
 
-        [Column("iamge_3")]
+        [Column("image_3")]
         public string? Image3 { get; set; }
 
-        [Column("iamge_4")]
+        [Column("image_4")]
         public string? Image4 { get; set; }
 
-        [Column("iamge_5")]
+        [Column("image_5")]
         public string? Image5 { get; set; }
 
-        [Column("iamge_6")]
+        [Column("image_6")]
         public string? Image6 { get; set; }
 
-        [Column("iamge_7")]
+        [Column("image_7")]
         public string? Image7 { get; set; }
 
-        [Column("iamge_8")]
+        [Column("image_8")]
         public string? Image8 { get; set; }
 
-        [Column("iamge_9")]
+        [Column("image_9")]
         public string? Image9 { get; set; }
 
-        [Column("iamge_10")]
+        [Column("image_10")]
         public string? Image10 { get; set; }
 
         [Column("name")]
         public string name { get; set; }
 
         [Column("breed_id")]
-        public string breedId { get; set; }
+        public int breedId { get; set; }
 
         [Column("age")]
         public int age { get; set; }
@@ -56,19 +56,19 @@ namespace NewLife_Web_api.Model
         public string sex { get; set; }
 
         [Column("is_need_attention")]
-        public string isNeedAttention { get; set; }
+        public bool isNeedAttention { get; set; }
 
         [Column("description")]
         public string description { get; set; }
 
         [Column("province_id")]
-        public string provinceId { get; set; }
+        public int provinceId { get; set; }
 
         [Column("district_id")]
-        public string districtId { get; set; }
+        public int districtId { get; set; }
 
         [Column("subdistrict_id")]
-        public string subdistrictId { get; set; }
+        public int subdistrictId { get; set; }
 
         [Column("address_details")]
         public string addressDetails { get; set; }
@@ -82,14 +82,14 @@ namespace NewLife_Web_api.Model
 
 
         [Column("create_at")]
-        public string creatAt { get; set; }
+        public DateTime? creatAt { get; set; }
 
 
         [Column("update_at")]
-        public string updateAt { get; set; }
+        public DateTime? updateAt { get; set; }
 
         [Column("delete_at")]
-        public string deleteAt { get; set; }
+        public DateTime? deleteAt { get; set; }
 
 
 
