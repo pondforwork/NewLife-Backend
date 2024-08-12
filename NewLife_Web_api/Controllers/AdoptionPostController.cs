@@ -24,7 +24,7 @@ namespace NewLife_Web_api.Controllers
             _hostEnvironment = hostEnvironment;
         }
 
-        [HttpPost]
+        [HttpPost("SaveAdoptionPostImage")]
         public async Task<IActionResult> SaveAdoptionPostImage(IFormFile image)
         {
             if (image == null || image.Length == 0)

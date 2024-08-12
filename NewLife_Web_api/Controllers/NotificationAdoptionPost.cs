@@ -29,6 +29,20 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
+        [HttpGet("GetList/{userId}")]
+        public async Task<IActionResult> GetListByUserId(int userId)
+        {
+            try
+            {
+                var noficationAdoptionPosts = await _context.NoficationAdoptionPosts.FromSqlRaw("SELECT notification_id,post_adoption_id,user_id,`description`,is_read,noti_date FROM notification_adoption_post WHERE user_id = @p0;",userId).ToListAsync();
+                return Ok(noficationAdoptionPosts);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while retrieving the posts.", error = ex.Message });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] NoficationAdoptionPost newPost)
         {
