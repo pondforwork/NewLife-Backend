@@ -54,6 +54,69 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
+        // POST: /Interest
+        [HttpPost]
+        public async Task<IActionResult> InsertInterest([FromBody] Interest newInterest)
+        {
+            try
+            {
+                var sql = "INSERT INTO interest (breed_id, size, sex) VALUES ({0}, {1}, {2})";
+                var rowsAffected = await _context.Database.ExecuteSqlRawAsync(
+                    sql,
+                    newInterest.breedId,
+                    newInterest.size,
+                    newInterest.sex);
+
+                if (rowsAffected > 0)
+                {
+                    return CreatedAtAction(nameof(GetInterest), new { Id = newInterest.interestId }, newInterest);
+                }
+                else
+                {
+                    return StatusCode(500, "Failed to insert the interest.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while inserting the interest: {ex.Message}");
+            }
+        }
+
+        // PATCH: /Interest/{id}
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchInterest(int id, [FromBody] Interest updatedInterest)
+        {
+            try
+            {
+                // เตรียม SQL query สำหรับการอัปเดต
+                var sql = "UPDATE interest SET breed_id = {0}, size = {1}, sex = {2} WHERE interest_id = {3}";
+
+                // ดำเนินการอัปเดตข้อมูลในฐานข้อมูล
+                var rowsAffected = await _context.Database.ExecuteSqlRawAsync(
+                    sql,
+                    updatedInterest.breedId,
+                    updatedInterest.size,
+                    updatedInterest.sex,
+                    id);
+
+                if (rowsAffected > 0)
+                {
+                    // ถ้ามีการอัปเดตอย่างน้อยหนึ่งแถว
+                    return Ok();
+                }
+                else
+                {
+                    // ถ้าไม่พบข้อมูลที่ตรงกับ id
+                    return NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                // ส่งคืนสถานะ 500 พร้อมข้อความแสดงข้อผิดพลาด
+                return StatusCode(500, $"An error occurred while updating the interest: {ex.Message}");
+            }
+        }
+
         // DELETE: /Interest/{Id}
         [HttpDelete("{Id}")]
         public async Task<IActionResult> DeleteInterest(int Id)
