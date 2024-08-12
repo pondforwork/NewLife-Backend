@@ -96,6 +96,39 @@ namespace NewLife_Web_api.Controllers
         }
 
 
+        [HttpPatch]
+        public async Task<IActionResult> Update([FromBody] Breed breed)
+        {
+            if (breed == null)
+            {
+                return BadRequest(new { message = "Breed data is invalid." });
+            }
+            try
+            {
+                var breeds = await _context.Breeds
+                    .FromSqlRaw("SELECT breed_id, animal_type, breed_name FROM breed WHERE breed_id = @p0", breed.breedId)
+                    .FirstOrDefaultAsync();
+
+                if (breeds == null)
+                {
+                    return NotFound();
+                }
+
+                var query = "UPDATE breed SET " +
+                            "animal_type = @p1, " +
+                            "breed_name = @p2 " +  
+                            "WHERE breed_id = @p0";
+
+                await _context.Database.ExecuteSqlRawAsync(query, breed.breedId, breed.animalType, breed.breedName);
+                return Ok("Update Donation Channel Success");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while updating the Donation Channel.", error = ex.Message });
+            }
+        }
+
+
 
 
     }
