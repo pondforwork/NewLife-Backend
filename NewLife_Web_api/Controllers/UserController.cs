@@ -24,6 +24,7 @@ namespace NewLife_Web_api.Controllers
 
         }
 
+        [HttpPost]
         public async Task<IActionResult> SaveImage(IFormFile image)
         {
             if (image == null || image.Length == 0)
