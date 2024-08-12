@@ -23,4 +23,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Interest> Interests { get; set; }
 
 
+    public DbSet<Breed> Breeds { get; set; }
+
+
+
 }
