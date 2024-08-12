@@ -5,7 +5,7 @@ public class Interest
 {
     [Key]
     [Column("interest_id")]
-    public int interestlId { get; set; }
+    public int interestId { get; set; }
 
     [Column("breed_id")]
     public int breedId { get; set; }

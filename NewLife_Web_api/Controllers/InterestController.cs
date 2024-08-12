@@ -60,24 +60,35 @@ namespace NewLife_Web_api.Controllers
         {
             try
             {
-                // Check if the interest exists before attempting to delete
-                var interest = await _context.Interests.FromSqlRaw("SELECT interest_id FROM interest WHERE interest_id = {0}", Id).FirstOrDefaultAsync();
+                // ตรวจสอบว่า Interest มีอยู่จริงก่อนที่จะลบ
+                var interestExists = await _context.Interests
+                    .FromSqlRaw("SELECT interest_id FROM interest WHERE interest_id = {0}", Id)
+                    .AnyAsync();
 
-                if (interest == null)
+                if (!interestExists)
                 {
                     return NotFound("Interest not found.");
                 }
 
-                // Execute the delete command
-                await _context.Database.ExecuteSqlRawAsync("DELETE FROM interest WHERE interest_id = {0}", Id);
+                // ดำเนินการลบด้วยคำสั่ง SQL ที่ถูกต้อง
+                var rowsAffected = await _context.Database.ExecuteSqlRawAsync(
+                    "DELETE FROM interest WHERE interest_id = {0}", Id);
 
-                return NoContent();
+                if (rowsAffected > 0)
+                {
+                    return NoContent();
+                }
+                else
+                {
+                    return StatusCode(500, "Failed to delete the interest.");
+                }
             }
             catch (Exception ex)
             {
-                // Log the exception (ex) here as needed
+                // บันทึกข้อผิดพลาด (ex) ตามความเหมาะสม
                 return StatusCode(500, $"An error occurred while deleting the interest: {ex.Message}");
             }
         }
+
     }
 }
