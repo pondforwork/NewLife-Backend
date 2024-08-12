@@ -24,7 +24,6 @@ namespace NewLife_Web_api.Controllers
 
         }
 
-        [HttpPost("saveImage")]
         public async Task<IActionResult> SaveImage(IFormFile image)
         {
             if (image == null || image.Length == 0)
@@ -44,7 +43,6 @@ namespace NewLife_Web_api.Controllers
                 await image.CopyToAsync(stream);
             }
 
-            // Return the file name or file path as needed
             return Ok(new { FileName = image.FileName });
         }
 
@@ -94,7 +92,6 @@ namespace NewLife_Web_api.Controllers
 
             try
             {
-                // Attempt to save the image
                 var result = await SaveImage(image);
                 if (result is OkObjectResult okResult)
                 {
