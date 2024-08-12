@@ -63,7 +63,30 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-        //        public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost, IFormFile Image1, IFormFile Image2, IFormFile Image3, IFormFile Image4, IFormFile Image5, IFormFile Image6, IFormFile Image7, IFormFile Image8, IFormFile Image9, IFormFile Image10)
+        [HttpGet("GetPost/{id}")]
+        public async Task<IActionResult> GetData(int id)
+        {
+            try
+            {
+                var adoptionPost = await _context.AdoptionPosts
+                    .FromSqlRaw("SELECT adoption_post_id, user_id, image_1, image_2, image_3, image_4, image_5, " +
+                    "image_6, image_7, image_8, image_9,image_10, name, breed_id, age, sex, is_need_attention, " +
+                    "description, province_id, district_id,subdistrict_id, address_details, adoption_status, " +
+                    "post_status, create_at, update_at, delete_at FROM adoption_post WHERE user_id = {0}", id)
+                    .FirstOrDefaultAsync();
+
+                if (adoptionPost == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(adoptionPost);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while retrieving the Adoption Post.");
+            }
+        }
 
         [HttpPost("SavePost")]
         public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost, IFormFile ImageInput1, IFormFile ImageInput2, IFormFile ImageInput3, IFormFile? ImageInput4, IFormFile? ImageInput5, IFormFile? ImageInput6, IFormFile? ImageInput7, IFormFile? ImageInput8, IFormFile? ImageInput9, IFormFile? ImageInput10)
@@ -160,10 +183,8 @@ namespace NewLife_Web_api.Controllers
             {
                 return StatusCode(500, new { message = "Post creation failed.", error = ex.Message });
             }
-
-
-
         }
+
 
 
     }
