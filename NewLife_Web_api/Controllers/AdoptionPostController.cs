@@ -6,6 +6,7 @@ using MySqlConnector;
 using NewLife_Web_api.Model;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace NewLife_Web_api.Controllers
 {
@@ -62,12 +63,55 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-
-        //public async Task<IActionResult> CreateUser([FromForm] User user, IFormFile image)
+        //        public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost, IFormFile Image1, IFormFile Image2, IFormFile Image3, IFormFile Image4, IFormFile Image5, IFormFile Image6, IFormFile Image7, IFormFile Image8, IFormFile Image9, IFormFile Image10)
 
         [HttpPost("SavePost")]
-        public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost)
+        public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost, IFormFile ImageInput1, IFormFile ImageInput2, IFormFile ImageInput3, IFormFile? ImageInput4, IFormFile? ImageInput5, IFormFile? ImageInput6, IFormFile? ImageInput7, IFormFile? ImageInput8, IFormFile? ImageInput9, IFormFile? ImageInput10)
         {
+            IFormFile[] images = { ImageInput1, ImageInput2, ImageInput3, ImageInput4, ImageInput5, ImageInput6, ImageInput7, ImageInput8, ImageInput9, ImageInput10 };
+            string[] imageFileNames = new string[10];
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].Length > 0)
+                {
+                    try
+                    {
+                        var result = await SaveAdoptionPostImage(images[i]);
+                        if (result is OkObjectResult okResult)
+                        {
+                            imageFileNames[i] = (string)((dynamic)okResult.Value).FileName;
+                        }
+                        else
+                        {
+                            return BadRequest(new { message = $"Image {i + 1} upload failed." });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(new { message = $"Image {i + 1} upload failed.", error = ex.Message });
+                    }
+                }
+                else if (i >= 3)
+                {
+                    imageFileNames[i] = null; // Optional images can be null
+                }
+                else
+                {
+                    return BadRequest(new { message = $"Image {i + 1} is required." });
+                }
+            }
+
+            newPost.Image1 = imageFileNames[0];
+            newPost.Image2 = imageFileNames[1];
+            newPost.Image3 = imageFileNames[2];
+            newPost.Image4 = imageFileNames[3];
+            newPost.Image5 = imageFileNames[4];
+            newPost.Image6 = imageFileNames[5];
+            newPost.Image7 = imageFileNames[6];
+            newPost.Image8 = imageFileNames[7];
+            newPost.Image9 = imageFileNames[8];
+            newPost.Image10 = imageFileNames[9];
+
             var query = "INSERT INTO adoption_post (" +
              "user_id, image_1, image_2, image_3, image_4, image_5, image_6, image_7, image_8, image_9, " +
              "image_10, name, breed_id, age, sex, is_need_attention, description, province_id, district_id, " +
@@ -80,9 +124,9 @@ namespace NewLife_Web_api.Controllers
             var parameters = new[]
             {
                 new MySqlParameter("@userId", newPost.userId),
-                new MySqlParameter("@image1", newPost.Image1),
-                new MySqlParameter("@image2", newPost.Image2),
-                new MySqlParameter("@image3", newPost.Image3),
+                new MySqlParameter("@image1", imageFileNames[0]),
+                new MySqlParameter("@image2", imageFileNames[1]),
+                new MySqlParameter("@image3", imageFileNames[2]),
                 new MySqlParameter("@image4", newPost.Image4 ?? (object)DBNull.Value),
                 new MySqlParameter("@image5", newPost.Image5 ?? (object)DBNull.Value),
                 new MySqlParameter("@image6", newPost.Image6 ?? (object)DBNull.Value),
