@@ -11,7 +11,7 @@ namespace NewLife_Web_api.Model
 
 
         [Column("user_id")]
-        public int UserId { get; set; }
+        public int userId { get; set; }
 
         [Column("adoption_post_id")]
         public int adoptionPostId { get; set; }
