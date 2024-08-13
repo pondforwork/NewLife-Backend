@@ -25,6 +25,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Breed> Breeds { get; set; }
 
+    public DbSet<ReportMissingPost> ReportMissingPosts { get; set; }
+
 
 
 }
