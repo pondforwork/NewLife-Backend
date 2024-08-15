@@ -38,7 +38,7 @@ namespace NewLife_Web_api.Controllers
 
                 if (breeds == null)
                 {
-                    return NotFound("Interest not found.");
+                    return NotFound("Breed not found.");
                 }
 
                 return Ok(breeds);

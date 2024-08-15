@@ -34,8 +34,16 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ReportAdoptionPost>()
             .ToTable("report_adoption_post");
 
+        modelBuilder.Entity<ReportMissingPost>()
+       .ToTable("report_missing_post");
+
+
         base.OnModelCreating(modelBuilder);
+
+
     }
+
+
 
 
 
