@@ -16,6 +16,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<NoficationAdoptionPost> NoficationAdoptionPosts { get; set; }
 
+    public DbSet<ReportAdoptionPost> ReportAdoptionPosts { get; set; }
+
     public DbSet<DonationChannel> DonationChannels { get; set; }
 
     public DbSet<FavoriteAnimal> FavoriteAnimals { get; set; }
@@ -26,6 +28,14 @@ public class ApplicationDbContext : DbContext
     public DbSet<Breed> Breeds { get; set; }
 
     public DbSet<ReportMissingPost> ReportMissingPosts { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ReportAdoptionPost>()
+            .ToTable("report_adoption_post");
+
+        base.OnModelCreating(modelBuilder);
+    }
 
 
 

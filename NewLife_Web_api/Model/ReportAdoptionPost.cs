@@ -8,7 +8,7 @@ namespace NewLife_Web_api.Model
     {
         [Key]
         [Column("report_missing_post_id")]
-        public int reportMissingPostId { get; set; }
+        public int? reportMissingPostId { get; set; }
 
         [Column("report_reason")]
         public string reportReason { get; set; }
