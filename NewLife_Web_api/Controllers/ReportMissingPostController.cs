@@ -106,6 +106,29 @@ namespace NewLife_Web_api.Controllers
         }
 
 
+        [HttpDelete("DeleteData/{id}")]
+        public async Task<IActionResult> DeleteData(int id)
+        {
+            try
+            {
+                var existingReportMissingPost = await _context.ReportMissingPosts
+                    .FindAsync(id);
+
+                if (existingReportMissingPost == null)
+                {
+                    return NotFound(new { message = "Report Missing post not found." });
+                }
+                _context.ReportMissingPosts.Remove(existingReportMissingPost);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Report Missing post deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while deleting the Report Missing post.", error = ex.Message });
+            }
+        }
+
 
 
 
