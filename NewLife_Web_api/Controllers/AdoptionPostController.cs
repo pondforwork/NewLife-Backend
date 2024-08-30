@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Hosting;
 using MySqlConnector;
+using Mysqlx.Crud;
 using NewLife_Web_api.Model;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -41,7 +42,47 @@ namespace NewLife_Web_api.Controllers
             {
                 await image.CopyToAsync(stream);
             }
-            return Ok(new { FileName = image.FileName });
+
+            //INSERT INTO image(image_name, image_category, is_processed) VALUES(?, adoption_post, 0)
+            //    select last inserted id
+
+            //return Ok(new {id = last id FileName = image.FileName });
+
+            var query = @"
+                INSERT INTO image (image_name, image_category, is_processed) 
+                VALUES (@imageName, 'adoption_post', 0);
+                SELECT LAST_INSERT_ID();";
+
+            // Create a new database connection
+            using (var connection = _context.Database.GetDbConnection())
+            {
+                await connection.OpenAsync();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = query;
+                    command.CommandType = System.Data.CommandType.Text;
+
+                    // Add parameters
+                    var imageNameParameter = command.CreateParameter();
+                    imageNameParameter.ParameterName = "@imageName";
+                    imageNameParameter.Value = image.FileName;
+                    command.Parameters.Add(imageNameParameter);
+
+                    // Execute the query and get the last inserted ID
+                    var result = await command.ExecuteScalarAsync();
+
+                    // Convert the result to int? (nullable int)
+                    int? lastInsertedId = result != DBNull.Value ? Convert.ToInt32(result) : (int?)null;
+
+                    // Return the result
+                    return Ok(new
+                    {
+                        id = lastInsertedId,
+                        fileName = image.FileName
+                    });
+                }
+            }
         }
 
 
@@ -89,51 +130,19 @@ namespace NewLife_Web_api.Controllers
         }
 
         [HttpPost("SavePost")]
-        public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost, IFormFile ImageInput1, IFormFile ImageInput2, IFormFile ImageInput3, IFormFile? ImageInput4, IFormFile? ImageInput5, IFormFile? ImageInput6, IFormFile? ImageInput7, IFormFile? ImageInput8, IFormFile? ImageInput9, IFormFile? ImageInput10)
+        public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost, int ImageInput1, int ImageInput2, int ImageInput3, int? ImageInput4, int? ImageInput5, int? ImageInput6, int? ImageInput7, int? ImageInput8, int? ImageInput9, int? ImageInput10)
         {
-            IFormFile[] images = { ImageInput1, ImageInput2, ImageInput3, ImageInput4, ImageInput5, ImageInput6, ImageInput7, ImageInput8, ImageInput9, ImageInput10 };
-            string[] imageFileNames = new string[10];
-            for (int i = 0; i < images.Length; i++)
-            {
-                if (images[i] != null && images[i].Length > 0)
-                {
-                    try
-                    {
-                        var result = await SaveAdoptionPostImage(images[i]);
-                        if (result is OkObjectResult okResult)
-                        {
-                            imageFileNames[i] = (string)((dynamic)okResult.Value).FileName;
-                        }
-                        else
-                        {
-                            return BadRequest(new { message = $"Image {i + 1} upload failed." });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return BadRequest(new { message = $"Image {i + 1} upload failed.", error = ex.Message });
-                    }
-                }
-                else if (i >= 3)
-                {
-                    imageFileNames[i] = null; // Optional images can be null
-                }
-                else
-                {
-                    return BadRequest(new { message = $"Image {i + 1} is required." });
-                }
-            }
-
-            newPost.Image1 = imageFileNames[0];
-            newPost.Image2 = imageFileNames[1];
-            newPost.Image3 = imageFileNames[2];
-            newPost.Image4 = imageFileNames[3];
-            newPost.Image5 = imageFileNames[4];
-            newPost.Image6 = imageFileNames[5];
-            newPost.Image7 = imageFileNames[6];
-            newPost.Image8 = imageFileNames[7];
-            newPost.Image9 = imageFileNames[8];
-            newPost.Image10 = imageFileNames[9];
+        
+            newPost.Image1 = ImageInput1;
+            newPost.Image2 = ImageInput2;
+            newPost.Image3 = ImageInput3;
+            newPost.Image4 = ImageInput4;
+            newPost.Image5 = ImageInput5;
+            newPost.Image6 = ImageInput6;
+            newPost.Image7 = ImageInput7;
+            newPost.Image8 = ImageInput8;
+            newPost.Image9 = ImageInput9;
+            newPost.Image10 = ImageInput10;
 
             var query = "INSERT INTO adoption_post (" +
              "user_id, image_1, image_2, image_3, image_4, image_5, image_6, image_7, image_8, image_9, " +
@@ -147,9 +156,9 @@ namespace NewLife_Web_api.Controllers
             var parameters = new[]
             {
                 new MySqlParameter("@userId", newPost.userId),
-                new MySqlParameter("@image1", imageFileNames[0]),
-                new MySqlParameter("@image2", imageFileNames[1]),
-                new MySqlParameter("@image3", imageFileNames[2]),
+                new MySqlParameter("@image1", newPost.Image1),
+                new MySqlParameter("@image2", newPost.Image2),
+                new MySqlParameter("@image3", newPost.Image3),
                 new MySqlParameter("@image4", newPost.Image4 ?? (object)DBNull.Value),
                 new MySqlParameter("@image5", newPost.Image5 ?? (object)DBNull.Value),
                 new MySqlParameter("@image6", newPost.Image6 ?? (object)DBNull.Value),
@@ -183,131 +192,131 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-        [HttpPatch("updatePost")]
-        public async Task<IActionResult> UpdatePost([FromForm] AdoptionPost updatedPost, IFormFile? ImageInput1, IFormFile? ImageInput2, IFormFile? ImageInput3, IFormFile? ImageInput4, IFormFile? ImageInput5, IFormFile? ImageInput6, IFormFile? ImageInput7, IFormFile? ImageInput8, IFormFile? ImageInput9, IFormFile? ImageInput10)
-        {
+        //[HttpPatch("updatePost")]
+        //public async Task<IActionResult> UpdatePost([FromForm] AdoptionPost updatedPost, IFormFile? ImageInput1, IFormFile? ImageInput2, IFormFile? ImageInput3, IFormFile? ImageInput4, IFormFile? ImageInput5, IFormFile? ImageInput6, IFormFile? ImageInput7, IFormFile? ImageInput8, IFormFile? ImageInput9, IFormFile? ImageInput10)
+        //{
 
-            var existingPost = await _context.AdoptionPosts
-                 .FromSqlRaw("SELECT adoption_post_id, user_id, image_1, image_2, image_3, image_4, image_5, " +
-                    "image_6, image_7, image_8, image_9,image_10, name, breed_id, age, sex, is_need_attention, " +
-                    "description, province_id, district_id,subdistrict_id, address_details, adoption_status, " +
-                    "post_status, create_at, update_at, delete_at FROM adoption_post WHERE adoption_post_id = {0}", updatedPost.adoptionPostId)
-                 .FirstOrDefaultAsync();
+        //    var existingPost = await _context.AdoptionPosts
+        //         .FromSqlRaw("SELECT adoption_post_id, user_id, image_1, image_2, image_3, image_4, image_5, " +
+        //            "image_6, image_7, image_8, image_9,image_10, name, breed_id, age, sex, is_need_attention, " +
+        //            "description, province_id, district_id,subdistrict_id, address_details, adoption_status, " +
+        //            "post_status, create_at, update_at, delete_at FROM adoption_post WHERE adoption_post_id = {0}", updatedPost.adoptionPostId)
+        //         .FirstOrDefaultAsync();
 
-            if (existingPost == null)
-            {
-                return NotFound();
-            }
-            IFormFile[] images = { ImageInput1, ImageInput2, ImageInput3, ImageInput4, ImageInput5, ImageInput6, ImageInput7, ImageInput8, ImageInput9, ImageInput10 };
-            string[] imageFileNames = new string[10];
+        //    if (existingPost == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    IFormFile[] images = { ImageInput1, ImageInput2, ImageInput3, ImageInput4, ImageInput5, ImageInput6, ImageInput7, ImageInput8, ImageInput9, ImageInput10 };
+        //    string[] imageFileNames = new string[10];
 
-            for (int i = 0; i < images.Length; i++)
-            {
-                if (images[i] != null && images[i].Length > 0)
-                {
-                    try
-                    {
-                        var result = await SaveAdoptionPostImage(images[i]);
-                        if (result is OkObjectResult okResult)
-                        {
-                            imageFileNames[i] = (string)((dynamic)okResult.Value).FileName;
-                        }
-                        else
-                        {
-                            return BadRequest(new { message = $"Image {i + 1} upload failed." });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return BadRequest(new { message = $"Image {i + 1} upload failed.", error = ex.Message });
-                    }
-                }
-                else
-                {
-                    imageFileNames[i] = null; 
-                }
-            }
+        //    for (int i = 0; i < images.Length; i++)
+        //    {
+        //        if (images[i] != null && images[i].Length > 0)
+        //        {
+        //            try
+        //            {
+        //                var result = await SaveAdoptionPostImage(images[i]);
+        //                if (result is OkObjectResult okResult)
+        //                {
+        //                    imageFileNames[i] = (string)((dynamic)okResult.Value).FileName;
+        //                }
+        //                else
+        //                {
+        //                    return BadRequest(new { message = $"Image {i + 1} upload failed." });
+        //                }
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                return BadRequest(new { message = $"Image {i + 1} upload failed.", error = ex.Message });
+        //            }
+        //        }
+        //        else
+        //        {
+        //            imageFileNames[i] = null; 
+        //        }
+        //    }
 
-            updatedPost.Image1 = imageFileNames[0];
-            updatedPost.Image2 = imageFileNames[1];
-            updatedPost.Image3 = imageFileNames[2];
-            updatedPost.Image4 = imageFileNames[3];
-            updatedPost.Image5 = imageFileNames[4];
-            updatedPost.Image6 = imageFileNames[5];
-            updatedPost.Image7 = imageFileNames[6];
-            updatedPost.Image8 = imageFileNames[7];
-            updatedPost.Image9 = imageFileNames[8];
-            updatedPost.Image10 = imageFileNames[9];
+        //    updatedPost.Image1 = imageFileNames[0];
+        //    updatedPost.Image2 = imageFileNames[1];
+        //    updatedPost.Image3 = imageFileNames[2];
+        //    updatedPost.Image4 = imageFileNames[3];
+        //    updatedPost.Image5 = imageFileNames[4];
+        //    updatedPost.Image6 = imageFileNames[5];
+        //    updatedPost.Image7 = imageFileNames[6];
+        //    updatedPost.Image8 = imageFileNames[7];
+        //    updatedPost.Image9 = imageFileNames[8];
+        //    updatedPost.Image10 = imageFileNames[9];
 
-            var query = "UPDATE adoption_post SET " +
-                      "user_id = @userId, " +
-                      "image_1 = @image1, " +
-                      "image_2 = @image2, " +
-                      "image_3 = @image3, " +
-                      "image_4 = @image4, " +
-                      "image_5 = @image5, " +
-                      "image_6 = @image6, " +
-                      "image_7 = @image7, " +
-                      "image_8 = @image8, " +
-                      "image_9 = @image9, " +
-                      "image_10 = @image10, " +
-                      "name = @name, " +
-                      "breed_id = @breedId, " +
-                      "age = @age, " +
-                      "sex = @sex, " +
-                      "is_need_attention = @isNeedAttention, " +
-                      "description = @description, " +
-                      "province_id = @provinceId, " +
-                      "district_id = @districtId, " +
-                      "subdistrict_id = @subdistrictId, " +
-                      "address_details = @addressDetails, " +
-                      "adoption_status = @adoptionStatus, " +
-                      "post_status = @postStatus, " +
-                      "create_at = @createAt, " +
-                      "update_at = @updateAt " +
-                      "WHERE adoption_post_id = @adoptionPostId";
+        //    var query = "UPDATE adoption_post SET " +
+        //              "user_id = @userId, " +
+        //              "image_1 = @image1, " +
+        //              "image_2 = @image2, " +
+        //              "image_3 = @image3, " +
+        //              "image_4 = @image4, " +
+        //              "image_5 = @image5, " +
+        //              "image_6 = @image6, " +
+        //              "image_7 = @image7, " +
+        //              "image_8 = @image8, " +
+        //              "image_9 = @image9, " +
+        //              "image_10 = @image10, " +
+        //              "name = @name, " +
+        //              "breed_id = @breedId, " +
+        //              "age = @age, " +
+        //              "sex = @sex, " +
+        //              "is_need_attention = @isNeedAttention, " +
+        //              "description = @description, " +
+        //              "province_id = @provinceId, " +
+        //              "district_id = @districtId, " +
+        //              "subdistrict_id = @subdistrictId, " +
+        //              "address_details = @addressDetails, " +
+        //              "adoption_status = @adoptionStatus, " +
+        //              "post_status = @postStatus, " +
+        //              "create_at = @createAt, " +
+        //              "update_at = @updateAt " +
+        //              "WHERE adoption_post_id = @adoptionPostId";
 
 
-            var parameters = new[]
-            {
-                new MySqlParameter("@adoptionPostId", existingPost.adoptionPostId),
-                new MySqlParameter("@userId", existingPost.userId),
-                new MySqlParameter("@image1", updatedPost.Image1 ?? existingPost.Image1),
-                new MySqlParameter("@image2", updatedPost.Image2 ?? existingPost.Image2),
-                new MySqlParameter("@image3", updatedPost.Image3 ?? existingPost.Image3),
-                new MySqlParameter("@image4", updatedPost.Image4 ?? existingPost.Image4 ?? (object)DBNull.Value),
-                new MySqlParameter("@image5", updatedPost.Image5 ?? existingPost.Image5 ??(object) DBNull.Value),
-                new MySqlParameter("@image6", updatedPost.Image6 ?? existingPost.Image6 ?? (object)DBNull.Value),
-                new MySqlParameter("@image7", updatedPost.Image7 ?? existingPost.Image7 ??(object) DBNull.Value),
-                new MySqlParameter("@image8", updatedPost.Image8 ?? existingPost.Image8 ?? (object)DBNull.Value),
-                new MySqlParameter("@image9", updatedPost.Image9 ?? existingPost.Image9 ?? (object)DBNull.Value),
-                new MySqlParameter("@image10", updatedPost.Image10 ?? existingPost.Image10 ?? (object)DBNull.Value),
-                new MySqlParameter("@name", updatedPost.name ?? (object)DBNull.Value),
-                new MySqlParameter("@breedId", existingPost.breedId),
-                new MySqlParameter("@age", updatedPost.age),
-                new MySqlParameter("@sex", updatedPost.sex ?? (object)DBNull.Value),
-                new MySqlParameter("@isNeedAttention", updatedPost.isNeedAttention),
-                new MySqlParameter("@description", updatedPost.description ?? (object)DBNull.Value),
-                new MySqlParameter("@provinceId", existingPost.provinceId),
-                new MySqlParameter("@districtId", existingPost.districtId),
-                new MySqlParameter("@subdistrictId", existingPost.subdistrictId),
-                new MySqlParameter("@addressDetails", updatedPost.addressDetails ?? (object)DBNull.Value),
-                new MySqlParameter("@adoptionStatus", updatedPost.adoptionStatus ?? (object)DBNull.Value),
-                new MySqlParameter("@postStatus", updatedPost.postStatus ?? (object)DBNull.Value),
-                new MySqlParameter("@createAt", existingPost.creatAt),
-                new MySqlParameter("@updateAt", DateTime.Now),
-            };
+        //    var parameters = new[]
+        //    {
+        //        new MySqlParameter("@adoptionPostId", existingPost.adoptionPostId),
+        //        new MySqlParameter("@userId", existingPost.userId),
+        //        new MySqlParameter("@image1", updatedPost.Image1 ?? existingPost.Image1),
+        //        new MySqlParameter("@image2", updatedPost.Image2 ?? existingPost.Image2),
+        //        new MySqlParameter("@image3", updatedPost.Image3 ?? existingPost.Image3),
+        //        new MySqlParameter("@image4", updatedPost.Image4 ?? existingPost.Image4 ?? (object)DBNull.Value),
+        //        new MySqlParameter("@image5", updatedPost.Image5 ?? existingPost.Image5 ??(object) DBNull.Value),
+        //        new MySqlParameter("@image6", updatedPost.Image6 ?? existingPost.Image6 ?? (object)DBNull.Value),
+        //        new MySqlParameter("@image7", updatedPost.Image7 ?? existingPost.Image7 ??(object) DBNull.Value),
+        //        new MySqlParameter("@image8", updatedPost.Image8 ?? existingPost.Image8 ?? (object)DBNull.Value),
+        //        new MySqlParameter("@image9", updatedPost.Image9 ?? existingPost.Image9 ?? (object)DBNull.Value),
+        //        new MySqlParameter("@image10", updatedPost.Image10 ?? existingPost.Image10 ?? (object)DBNull.Value),
+        //        new MySqlParameter("@name", updatedPost.name ?? (object)DBNull.Value),
+        //        new MySqlParameter("@breedId", existingPost.breedId),
+        //        new MySqlParameter("@age", updatedPost.age),
+        //        new MySqlParameter("@sex", updatedPost.sex ?? (object)DBNull.Value),
+        //        new MySqlParameter("@isNeedAttention", updatedPost.isNeedAttention),
+        //        new MySqlParameter("@description", updatedPost.description ?? (object)DBNull.Value),
+        //        new MySqlParameter("@provinceId", existingPost.provinceId),
+        //        new MySqlParameter("@districtId", existingPost.districtId),
+        //        new MySqlParameter("@subdistrictId", existingPost.subdistrictId),
+        //        new MySqlParameter("@addressDetails", updatedPost.addressDetails ?? (object)DBNull.Value),
+        //        new MySqlParameter("@adoptionStatus", updatedPost.adoptionStatus ?? (object)DBNull.Value),
+        //        new MySqlParameter("@postStatus", updatedPost.postStatus ?? (object)DBNull.Value),
+        //        new MySqlParameter("@createAt", existingPost.creatAt),
+        //        new MySqlParameter("@updateAt", DateTime.Now),
+        //    };
 
-            try
-            {
-                await _context.Database.ExecuteSqlRawAsync(query, parameters);
-                return Ok(new { message = "Post updated successfully." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Update Post failed.", error = ex.Message });
-            }
-        }
+        //    try
+        //    {
+        //        await _context.Database.ExecuteSqlRawAsync(query, parameters);
+        //        return Ok(new { message = "Post updated successfully." });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "Update Post failed.", error = ex.Message });
+        //    }
+        //}
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)

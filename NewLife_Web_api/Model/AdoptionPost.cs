@@ -13,35 +13,35 @@ namespace NewLife_Web_api.Model
         [Column("user_id")]
         public int userId { get; set; }
 
-        [Column("image_1")]
-        public string? Image1 { get; set; }
+        [Column("image_1_id")]
+        public int? Image1 { get; set; }
        
-        [Column("image_2")]
-        public string? Image2 { get; set; }
+        [Column("image_2_id")]
+        public int? Image2 { get; set; }
 
-        [Column("image_3")]
-        public string? Image3 { get; set; }
+        [Column("image_3_id")]
+        public int? Image3 { get; set; }
 
-        [Column("image_4")]
-        public string? Image4 { get; set; }
+        [Column("image_4_id")]
+        public int? Image4 { get; set; }
 
-        [Column("image_5")]
-        public string? Image5 { get; set; }
+        [Column("image_5_id")]
+        public int? Image5 { get; set; }
 
-        [Column("image_6")]
-        public string? Image6 { get; set; }
+        [Column("image_6_id")]
+        public int? Image6 { get; set; }
 
-        [Column("image_7")]
-        public string? Image7 { get; set; }
+        [Column("image_7_id")]
+        public int? Image7 { get; set; }
 
-        [Column("image_8")]
-        public string? Image8 { get; set; }
+        [Column("image_8_id")]
+        public int? Image8 { get; set; }
 
-        [Column("image_9")]
-        public string? Image9 { get; set; }
+        [Column("image_9_id")]
+        public int? Image9 { get; set; }
 
-        [Column("image_10")]
-        public string? Image10 { get; set; }
+        [Column("image_10_id")]
+        public int? Image10 { get; set; }
 
         [Column("name")]
         public string name { get; set; }
