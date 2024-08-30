@@ -69,12 +69,6 @@ namespace NewLife_Web_api.Controllers
             {
                 var images = await _context.Images.FromSqlRaw("SELECT image_id , image_name , image_category , is_processed FROM image WHERE is_processed = 0;").ToListAsync();
 
-                //foreach (var image in images)
-                //{
-                //    Debug.WriteLine(image.imageName);
-                //    var img = GetImage(image.imageId);
-                //}
-
                 using (var httpClient = new HttpClient())
                 {
                     foreach (var image in images)
@@ -94,6 +88,8 @@ namespace NewLife_Web_api.Controllers
                             var fileContent = new StreamContent(fileStream);
                             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
                             form.Add(fileContent, "image", image.imageName);
+                            var textContentData = new StringContent(image.imageId.ToString());
+                            form.Add(textContentData, "imageId");
 
                             var response = await httpClient.PostAsync("http://localhost:5000/process_image", form);
 
@@ -102,13 +98,10 @@ namespace NewLife_Web_api.Controllers
                                 Debug.WriteLine($"Failed to upload image: {image.imageName}");
                                 continue;
                             }
-
                             image.isProcessed = true;
                         }
                     }
                 }
-
-
                 return Ok();
             }
             catch (Exception ex)
