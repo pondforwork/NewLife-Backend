@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Hosting;
 using MySqlConnector;
 using Mysqlx.Crud;
+using Mysqlx.Prepare;
 using NewLife_Web_api.Model;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -25,6 +26,42 @@ namespace NewLife_Web_api.Controllers
             _hostEnvironment = hostEnvironment;
         }
 
+        [HttpGet("GetAdoptionPostImage/{imageId}")]
+        public async Task<IActionResult> GetImage(int imageId)
+        {
+            var query = "SELECT image_name FROM image WHERE image_id = @p0";
+
+            string imageName;
+            using (var connection = _context.Database.GetDbConnection())
+            {
+                await connection.OpenAsync();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = query;
+                    command.CommandType = System.Data.CommandType.Text;
+                    var imageIdParameter = command.CreateParameter();
+                    imageIdParameter.ParameterName = "@p0";
+                    imageIdParameter.Value = imageId;
+                    command.Parameters.Add(imageIdParameter);
+                    var result = await command.ExecuteScalarAsync();
+                    imageName = result != DBNull.Value ? result.ToString() : null;
+                }
+            }
+            if (string.IsNullOrEmpty(imageName))
+            {
+                return NotFound("Image not found.");
+            }
+            // กำหนด Path ไปที่ image/adoption post
+            var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "Image/adoption_post", imageName);
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound("Image file not found on the server.");
+            }
+            var contentType = "image/jpeg";
+            return PhysicalFile(filePath, contentType);
+        }
+
+
         [HttpPost("SaveAdoptionPostImage")]
         public async Task<IActionResult> SaveAdoptionPostImage(IFormFile image)
         {
@@ -43,17 +80,11 @@ namespace NewLife_Web_api.Controllers
                 await image.CopyToAsync(stream);
             }
 
-            //INSERT INTO image(image_name, image_category, is_processed) VALUES(?, adoption_post, 0)
-            //    select last inserted id
-
-            //return Ok(new {id = last id FileName = image.FileName });
-
             var query = @"
                 INSERT INTO image (image_name, image_category, is_processed) 
                 VALUES (@imageName, 'adoption_post', 0);
                 SELECT LAST_INSERT_ID();";
 
-            // Create a new database connection
             using (var connection = _context.Database.GetDbConnection())
             {
                 await connection.OpenAsync();
