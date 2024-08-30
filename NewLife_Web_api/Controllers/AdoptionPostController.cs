@@ -130,23 +130,11 @@ namespace NewLife_Web_api.Controllers
         }
 
         [HttpPost("SavePost")]
-        public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost, int ImageInput1, int ImageInput2, int ImageInput3, int? ImageInput4, int? ImageInput5, int? ImageInput6, int? ImageInput7, int? ImageInput8, int? ImageInput9, int? ImageInput10)
+        public async Task<IActionResult> CreatePost([FromForm] AdoptionPost newPost)
         {
-        
-            newPost.Image1 = ImageInput1;
-            newPost.Image2 = ImageInput2;
-            newPost.Image3 = ImageInput3;
-            newPost.Image4 = ImageInput4;
-            newPost.Image5 = ImageInput5;
-            newPost.Image6 = ImageInput6;
-            newPost.Image7 = ImageInput7;
-            newPost.Image8 = ImageInput8;
-            newPost.Image9 = ImageInput9;
-            newPost.Image10 = ImageInput10;
-
             var query = "INSERT INTO adoption_post (" +
-             "user_id, image_1, image_2, image_3, image_4, image_5, image_6, image_7, image_8, image_9, " +
-             "image_10, name, breed_id, age, sex, is_need_attention, description, province_id, district_id, " +
+             "user_id, image_1_id, image_2_id, image_3_id, image_4_id, image_5_id, image_6_id, image_7_id, image_8_id, image_9_id, " +
+             "image_10_id, name, breed_id, age, sex, is_need_attention, description, province_id, district_id, " +
              "subdistrict_id, address_details, adoption_status, post_status, create_at) " +
              "VALUES (" +
              "@userId, @image1, @image2, @image3, @image4, @image5, @image6, @image7, @image8, @image9, " +
