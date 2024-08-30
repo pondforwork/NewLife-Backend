@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 import cv2
 import numpy as np
@@ -7,6 +8,8 @@ import tempfile
 import mysql.connector
 
 app = Flask(__name__)
+
+load_dotenv()
 
 # Retrieve environment variables
 DB_HOST = os.getenv('DB_HOST')
