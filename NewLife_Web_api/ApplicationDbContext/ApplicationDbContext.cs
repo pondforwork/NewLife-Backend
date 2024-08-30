@@ -29,6 +29,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<ReportMissingPost> ReportMissingPosts { get; set; }
 
+    public DbSet<AdoptionHistory> AdoptionHistorys { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ReportAdoptionPost>()
@@ -37,11 +39,15 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ReportMissingPost>()
        .ToTable("report_missing_post");
 
+        modelBuilder.Entity<AdoptionHistory>()
+      .ToTable("adoption_history");
+
 
         base.OnModelCreating(modelBuilder);
 
 
     }
+
 
 
 
