@@ -7,6 +7,11 @@
 *.userosscache
 *.sln.docstates
 
+.venv/
+venv/
+env/
+ENV/
+
 # Ignore build results
 [Dd]ebug/
 [Rr]elease/
