@@ -7,9 +7,9 @@ using Mysqlx.Crud;
 using Mysqlx.Prepare;
 using NewLife_Web_api.Model;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
-
 namespace NewLife_Web_api.Controllers
 {
 
@@ -59,6 +59,62 @@ namespace NewLife_Web_api.Controllers
             }
             var contentType = "image/jpeg";
             return PhysicalFile(filePath, contentType);
+        }
+
+
+        [HttpPost("processImage")]
+        public async Task<IActionResult> ProcessImage()
+        {
+            try
+            {
+                var images = await _context.Images.FromSqlRaw("SELECT image_id , image_name , image_category , is_processed FROM image WHERE is_processed = 0;").ToListAsync();
+
+                //foreach (var image in images)
+                //{
+                //    Debug.WriteLine(image.imageName);
+                //    var img = GetImage(image.imageId);
+                //}
+
+                using (var httpClient = new HttpClient())
+                {
+                    foreach (var image in images)
+                    {
+                        var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "Image/adoption_post", image.imageName);
+
+                        if (!System.IO.File.Exists(filePath))
+                        {
+                            Debug.WriteLine($"Image file not found: {filePath}");
+                            continue;
+                        }
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                        {
+                            var form = new MultipartFormDataContent();
+
+                            var fileContent = new StreamContent(fileStream);
+                            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+                            form.Add(fileContent, "image", image.imageName);
+
+                            var response = await httpClient.PostAsync("http://localhost:5000/process_image", form);
+
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                Debug.WriteLine($"Failed to upload image: {image.imageName}");
+                                continue;
+                            }
+
+                            image.isProcessed = true;
+                        }
+                    }
+                }
+
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while retrieving the posts.", error = ex.Message });
+            }
         }
 
 
