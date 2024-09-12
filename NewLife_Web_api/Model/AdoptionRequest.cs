@@ -21,7 +21,7 @@ namespace NewLife_Web_api.Model
         [Column("name")]
         public string name { get; set; }
 
-        [Column("last_name")]
+        [Column("lastname")]
         public string lastname { get; set; }
 
         [Column("gender")]

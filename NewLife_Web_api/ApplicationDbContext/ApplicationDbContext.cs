@@ -33,6 +33,9 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Provinces> Provincess { get; set; }
 
+    public DbSet<AdoptionRequest> AdoptionRequest { get; set; }
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ReportAdoptionPost>()
