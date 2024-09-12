@@ -52,5 +52,47 @@ namespace NewLife_Web_api.Controllers
                 return BadRequest(new { message = "An error occurred while retrieving the Adoption Request.", error = ex.Message });
             }
         }
+
+        [HttpGet("{Id}")]
+        public async Task<IActionResult> GetAdiotionPost(int Id)
+        {
+            try
+            {
+                var adoptionRequests = await _context.AdoptionRequest.FromSqlRaw(@"SELECT 
+                                        request_id,
+                                        adoption_post_id,
+                                        user_id,
+                                        status,
+                                        name,
+                                        lastname,
+                                        gender,
+                                        age,
+                                        email,
+                                        tel,
+                                        career,
+                                        num_of_fam_members,
+                                        monthly_income,
+                                        experience,
+                                        size_of_residence,
+                                        type_of_residence,
+                                        free_time_per_day,
+                                        date_added
+                                    FROM 
+                                        adoption_request 
+                                    WHERE request_id = {0}", Id).FirstOrDefaultAsync();
+
+                if (adoptionRequests == null)
+                {
+                    return NotFound("AdoptionRequest not found.");
+                }
+
+                return Ok(adoptionRequests);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (ex) here as needed
+                return StatusCode(500, $"An error occurred while retrieving the adoptionRequests: {ex.Message}");
+            }
+        }
     }
 }
