@@ -35,6 +35,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<AdoptionRequest> AdoptionRequest { get; set; }
 
+    public DbSet<SubDistrict> SubDistricts { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
