@@ -37,6 +37,9 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<SubDistrict> SubDistricts { get; set; }
 
+    public DbSet<District> Districts { get; set; }
+
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
