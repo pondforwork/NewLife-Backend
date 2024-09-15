@@ -51,6 +51,10 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Provinces>()
      .ToTable("provinces");
+       
+        modelBuilder.Entity<SubDistrict>()
+     .ToTable("sub_district");
+
 
 
         base.OnModelCreating(modelBuilder);

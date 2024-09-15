@@ -61,7 +61,7 @@ namespace NewLife_Web_api.Controllers
 
             try
             {
-                var query = "INSERT INTO subdistrict (zip_code, name_th, name_en, district_id ) " +
+                var query = "INSERT INTO sub_district (zip_code, name_th, name_en, district_id ) " +
                                            "VALUES (@p0, @p1, @p2, @p3)";
                 await _context.Database.ExecuteSqlRawAsync(query, newPost.zipCode, newPost.nameTh, newPost.nameEn, newPost.districtId);
                 return Ok("Create SubDistrict Success");
@@ -71,7 +71,59 @@ namespace NewLife_Web_api.Controllers
                 return BadRequest(new { message = "An error occurred while creating the post.", error = ex.Message });
             }
         }
+        [HttpPatch("UpdateData")]
+        public async Task<IActionResult> UpdateData([FromBody] SubDistrict updatedSubDistrict)
+        {
+            if (updatedSubDistrict == null)
+            {
+                return BadRequest(new { message = "Invalid data." });
+            }
 
+            try
+            {
+                SubDistrict? existingSubDistrict = await _context.SubDistricts
+                    .FindAsync(updatedSubDistrict.Id);
+
+                if (existingSubDistrict == null)
+                {
+                    return NotFound(new { message = "SubDistrict not found." });
+                }
+
+                existingSubDistrict.zipCode = updatedSubDistrict.zipCode;
+                existingSubDistrict.nameTh = updatedSubDistrict.nameTh;
+                existingSubDistrict.nameEn = updatedSubDistrict.nameEn;
+                existingSubDistrict.districtId = updatedSubDistrict.districtId;
+
+                await _context.SaveChangesAsync();
+                return Ok(existingSubDistrict);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while updating the SubDistrict.", error = ex.Message });
+            }
+        }
+        [HttpDelete("DeleteData/{id}")]
+        public async Task<IActionResult> DeleteData(int id)
+        {
+            try
+            {
+                var existingSubDistrict = await _context.SubDistricts
+                    .FindAsync(id);
+
+                if (existingSubDistrict == null)
+                {
+                    return NotFound(new { message = "SubDistrict  not found." });
+                }
+                _context.SubDistricts.Remove(existingSubDistrict);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "SubDistrict  deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while deleting the SubDistrict.", error = ex.Message });
+            }
+        }
 
 
 
