@@ -7,7 +7,7 @@ namespace NewLife_Web_api.Model
     {
         [Key]
         [Column("request_id")]
-        public int requestId { get; set; }
+        public int? requestId { get; set; }
 
         [Column("adoption_post_id")]
         public int adoptionPostId { get; set; }
