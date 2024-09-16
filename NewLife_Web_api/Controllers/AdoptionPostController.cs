@@ -44,6 +44,20 @@ namespace NewLife_Web_api.Controllers
             return Ok(new { FileName = image.FileName });
         }
 
+        [HttpGet("getImage/{imageName}")]
+        public IActionResult GetImage(string imageName)
+        {
+            var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "Image/adoption_post", imageName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound();
+            }
+
+            var contentType = "image/jpeg";
+            return PhysicalFile(filePath, contentType);
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> GetList()
