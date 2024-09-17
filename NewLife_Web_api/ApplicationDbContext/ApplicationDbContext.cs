@@ -41,6 +41,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<NotificationMissingPost> NotificationMissingPosts { get; set; }
 
+    public DbSet<NotificationAdoptionRequest> NotificationAdoptionRequests { get; set; }
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -62,6 +64,8 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<NotificationMissingPost>()
     .ToTable("notification_missing_post");
+
+        
 
 
 
