@@ -39,6 +39,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<District> Districts { get; set; }
 
+    public DbSet<NotificationMissingPost> NotificationMissingPosts { get; set; }
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

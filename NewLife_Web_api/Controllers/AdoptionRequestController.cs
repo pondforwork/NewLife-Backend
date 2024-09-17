@@ -231,7 +231,7 @@ namespace NewLife_Web_api.Controllers
         {
             try
             {
-\                var adoptionRequest = await _context.AdoptionRequest
+              var adoptionRequest = await _context.AdoptionRequest
                     .FromSqlRaw(@"SELECT * FROM adoption_request WHERE request_id = {0}", Id)
                     .FirstOrDefaultAsync();
 
