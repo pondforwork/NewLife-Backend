@@ -60,6 +60,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<SubDistrict>()
      .ToTable("sub_district");
 
+        modelBuilder.Entity<NotificationMissingPost>()
+    .ToTable("notification_missing_post");
+
 
 
         base.OnModelCreating(modelBuilder);
