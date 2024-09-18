@@ -65,7 +65,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<NotificationMissingPost>()
     .ToTable("notification_missing_post");
 
-        
+        modelBuilder.Entity<NotificationAdoptionRequest>()
+    .ToTable("notification_adoption_request");
+
+
 
 
 

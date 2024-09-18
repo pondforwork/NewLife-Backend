@@ -30,7 +30,7 @@ namespace NewLife_Web_api.Controllers
                     n.requestId,
                     n.userId,
                     n.description,
-                    isRead = n.isRead.HasValue ? n.isRead.Value : (bool?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า isRead เป็น null
+                    isRead = n.isRead.HasValue ? n.isRead.Value : (int?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า isRead เป็น null
                     notiDate = n.notiDate.HasValue ? n.notiDate.Value : (DateTime?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า notiDate เป็น null
                 }).ToList();
 
@@ -59,7 +59,7 @@ namespace NewLife_Web_api.Controllers
                     n.requestId,
                     n.userId,
                     n.description,
-                    isRead = n.isRead.HasValue ? n.isRead.Value : (bool?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า isRead เป็น null
+                    isRead = n.isRead.HasValue ? n.isRead.Value : (int?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า isRead เป็น null
                     notiDate = n.notiDate.HasValue ? n.notiDate.Value : (DateTime?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า notiDate เป็น null
                 }).ToList();
 
@@ -102,6 +102,80 @@ namespace NewLife_Web_api.Controllers
                 return BadRequest(new { message = "An error occurred while creating the post.", error = ex.Message });
             }
         }
+
+        [HttpPatch("UpdateData")]
+        public async Task<IActionResult> UpdateData([FromBody] NotificationAdoptionRequest updatedNotifAdopReq)
+        {
+            if (updatedNotifAdopReq == null)
+            {
+                return BadRequest(new { message = "Invalid data." });
+            }
+
+            try
+            {
+                // ค้นหา NotificationAdoptionRequest ที่ต้องการอัปเดต
+                NotificationAdoptionRequest? existingNotifAdopReq = await _context.NotificationAdoptionRequests
+                    .FindAsync(updatedNotifAdopReq.notiAdopReqId);
+
+                if (existingNotifAdopReq == null)
+                {
+                    return NotFound(new { message = "Notification Adoption Request not found." });
+                }
+
+                // อัปเดตฟิลด์ที่ไม่เป็น nullable
+                existingNotifAdopReq.requestId = updatedNotifAdopReq.requestId;
+                existingNotifAdopReq.userId = updatedNotifAdopReq.userId;
+                existingNotifAdopReq.description = updatedNotifAdopReq.description;
+
+                // จัดการกับ nullable fields
+                if (updatedNotifAdopReq.isRead.HasValue)  // isRead เป็น nullable (int?)
+                {
+                    existingNotifAdopReq.isRead = updatedNotifAdopReq.isRead.Value;
+                }
+
+                if (updatedNotifAdopReq.notiDate.HasValue)  // notiDate เป็น nullable (DateTime?)
+                {
+                    existingNotifAdopReq.notiDate = updatedNotifAdopReq.notiDate.Value;
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(existingNotifAdopReq);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while updating the Notification Adoption Request.", error = ex.Message });
+            }
+        }
+        [HttpDelete("DeleteData/{id}")]
+        public async Task<IActionResult> DeleteData(int id)
+        {
+            try
+            {
+                // ค้นหา NotificationAdoptionRequest ที่ต้องการลบ
+                var existingNotifAdopReq = await _context.NotificationAdoptionRequests
+                    .FindAsync(id);
+
+                if (existingNotifAdopReq == null)
+                {
+                    return NotFound(new { message = "Notification Adoption Request not found." });
+                }
+
+                // ลบ NotificationAdoptionRequest
+                _context.NotificationAdoptionRequests.Remove(existingNotifAdopReq);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Notification Adoption Request deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while deleting the Notification Adoption Request.", error = ex.Message });
+            }
+        }
+
+
+
+
+
 
 
 

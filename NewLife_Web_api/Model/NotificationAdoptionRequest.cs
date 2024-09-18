@@ -18,8 +18,9 @@ namespace NewLife_Web_api.Model
         [Column("description")]
         public String description { get; set; }
 
+        // These fields must be nullable
         [Column("is_read")]
-        public bool? isRead { get; set; }
+        public int? isRead { get; set; }
 
         [Column("noti_date")]
         public DateTime? notiDate { get; set; }
