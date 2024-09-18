@@ -159,7 +159,7 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<IActionResult> UpdateAdoptionRequest(int id, [FromBody] AdoptionRequest updatedRequest)
         {
             if (!ModelState.IsValid)
@@ -231,9 +231,9 @@ namespace NewLife_Web_api.Controllers
         {
             try
             {
-              var adoptionRequest = await _context.AdoptionRequest
-                    .FromSqlRaw(@"SELECT * FROM adoption_request WHERE request_id = {0}", Id)
-                    .FirstOrDefaultAsync();
+                var adoptionRequest = await _context.AdoptionRequest
+                      .FromSqlRaw(@"SELECT * FROM adoption_request WHERE request_id = {0}", Id)
+                      .FirstOrDefaultAsync();
 
                 if (adoptionRequest == null)
                 {
