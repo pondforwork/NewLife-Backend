@@ -43,6 +43,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<NotificationAdoptionRequest> NotificationAdoptionRequests { get; set; }
 
+    public DbSet<FindOwnerPost> FindOwnerPosts { get; set; }
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
