@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NewLife_Web_api.Model
 {
@@ -20,31 +21,31 @@ namespace NewLife_Web_api.Model
         public string image_3 { get; set; }
 
         [Column("image_4")]
-        public string image_4 { get; set; }
+        public string? image_4 { get; set; }
 
         [Column("image_5")]
-        public string image_5 { get; set; }
+        public string? image_5 { get; set; }
 
         [Column("image_6")]
-        public string image_6 { get; set; }
+        public string? image_6 { get; set; }
 
         [Column("image_7")]
-        public string image_7 { get; set; }
+        public string? image_7 { get; set; }
 
         [Column("image_8")]
-        public string image_8 { get; set; }
+        public string? image_8 { get; set; }
 
         [Column("image_9")]
-        public string image_9 { get; set; }
+        public string? image_9 { get; set; }
 
         [Column("image_10")]
-        public string image_10 { get; set; }
+        public string? image_10 { get; set; }
 
         [Column("name")]
         public string name { get; set; }
 
         [Column("breed_id")]
-        public string breedId { get; set; }
+        public int breedId { get; set; }
 
         [Column("age")]
         public int age { get; set; }
@@ -58,14 +59,14 @@ namespace NewLife_Web_api.Model
         [Column("description")]
         public string description { get; set; }
 
-        [Column("province")]
-        public string province { get; set; }
+        [Column("province_id")]
+        public int provinceId { get; set; }
 
-        [Column("district")]
-        public string district { get; set; }
+        [Column("district_id")]
+        public int districtId { get; set; }
 
-        [Column("sub_district")]
-        public string subDistrict { get; set; }
+        [Column("subdistrict_id")]
+        public int subDistrictId { get; set; }
 
         [Column("address_details")]
         public string addressDetails { get; set; }

@@ -45,6 +45,9 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<FindOwnerPost> FindOwnerPosts { get; set; }
 
+    public DbSet<MissingPost> MissingPosts { get; set; }
+
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -70,8 +73,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<NotificationAdoptionRequest>()
     .ToTable("notification_adoption_request");
 
-
-
+        modelBuilder.Entity<MissingPost>()
+    .ToTable("missing_post");
+        
 
 
         base.OnModelCreating(modelBuilder);
