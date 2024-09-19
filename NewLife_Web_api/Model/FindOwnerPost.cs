@@ -43,40 +43,40 @@ namespace NewLife_Web_api.Model
         public string? Image10 { get; set; }
 
         [Column("name")]
-        public string name { get; set; }
+        public string? name { get; set; }
 
         [Column("breed_id")]
         public int breedId { get; set; }
 
         [Column("sex")]
-        public string sex { get; set; }
+        public string? sex { get; set; }
 
         [Column("description")]
-        public string description { get; set; }
+        public string? description { get; set; }
 
-        [Column("province")]
-        public int province { get; set; }
+        [Column("province_id")]
+        public int? province { get; set; }
 
-        [Column("district")]
-        public int district { get; set; }
+        [Column("district_id")]
+        public int? district { get; set; }
 
-        [Column("sub_district")]
-        public int subDistrict { get; set; }
+        [Column("subdistrict_id")]
+        public int? subDistrict { get; set; }
 
         [Column("address_details")]
-        public string addressDetails { get; set; }
+        public string? addressDetails { get; set; }
 
         [Column("post_status")]
-        public string postStatus { get; set; }
+        public string? postStatus { get; set; }
 
         [Column("create_at")]
-        public DateTime createAt { get; set; }
+        public DateTime? createAt { get; set; }
 
         [Column("update_at")]
-        public DateTime updateAt { get; set; }
+        public DateTime? updateAt { get; set; }
 
         [Column("delete_at")]
-        public DateTime deleteAt { get; set; }
+        public DateTime? deleteAt { get; set; }
 
 
 
