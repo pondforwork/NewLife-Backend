@@ -281,11 +281,11 @@ namespace NewLife_Web_api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> VerifyPasswordAsync(string email, string enteredPassword)
+        public async Task<IActionResult> VerifyPasswordAsync(string email, string password)
         {
             try
             {
-                string enteredPasswordHash = ComputeSha256Hash(enteredPassword);
+                string enteredPasswordHash = ComputeSha256Hash(password);
                 Debug.WriteLine(enteredPasswordHash);
 
                 var user = await _context.Users
@@ -299,9 +299,9 @@ namespace NewLife_Web_api.Controllers
 
                 return Ok(new
                 {
-                    UserId = user.userId,
-                    Name = user.name,
-                    Email = user.email
+                    userId = user.userId,
+                    name = user.name,
+                    imageUrl = user.profilePic
                 });
             }
             catch (Exception ex)
