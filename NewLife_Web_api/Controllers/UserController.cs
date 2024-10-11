@@ -5,6 +5,11 @@ using NewLife_Web_api.Controllers;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Microsoft.Extensions.Hosting;
 using MySqlConnector;
+using Org.BouncyCastle.Crypto.Generators;
+using Microsoft.AspNetCore.Identity.Data;
+using System.Text;
+using System.Security.Cryptography;
+using System.Diagnostics;
 
 namespace NewLife_Web_api.Controllers
 {
@@ -81,7 +86,6 @@ namespace NewLife_Web_api.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception (ex) here as needed
                 return StatusCode(500, "An error occurred while retrieving the user.");
             }
         }
@@ -276,6 +280,50 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> VerifyPasswordAsync(string email, string enteredPassword)
+        {
+            try
+            {
+                string enteredPasswordHash = ComputeSha256Hash(enteredPassword);
+                Debug.WriteLine(enteredPasswordHash);
 
+                var user = await _context.Users
+                    .FromSqlRaw("SELECT * FROM user WHERE email = {0}", email)
+                    .FirstOrDefaultAsync();
+
+                if (user == null || user.password != enteredPasswordHash)
+                {
+                    return Unauthorized("Invalid email or password.");
+                }
+
+                return Ok(new
+                {
+                    UserId = user.userId,
+                    Name = user.name,
+                    Email = user.email
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error during login: {ex.Message}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
+
+        private string ComputeSha256Hash(string rawData)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
     }
 }
