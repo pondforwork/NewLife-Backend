@@ -29,15 +29,14 @@ namespace NewLife_Web_api.Controllers
 
         }
 
-        [HttpPost]
+        [HttpPost("saveImage")]
         public async Task<IActionResult> SaveImage(IFormFile image)
         {
             if (image == null || image.Length == 0)
             {
                 return BadRequest("No image uploaded.");
             }
-
-            var uploadsFolder = Path.Combine(_hostEnvironment.ContentRootPath, "Image");
+            var uploadsFolder = Path.Combine(_hostEnvironment.ContentRootPath, "image", "user");
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
@@ -50,6 +49,20 @@ namespace NewLife_Web_api.Controllers
             }
 
             return Ok(new { FileName = image.FileName });
+        }
+
+        [HttpGet("getImage/{imageName}")]
+        public IActionResult GetImage(string imageName)
+        {
+            var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "image", "user", imageName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound();
+            }
+
+            var contentType = "image/jpeg"; 
+            return PhysicalFile(filePath, contentType);
         }
 
         [HttpGet]
