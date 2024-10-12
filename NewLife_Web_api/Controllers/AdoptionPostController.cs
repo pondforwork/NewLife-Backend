@@ -47,14 +47,14 @@ namespace NewLife_Web_api.Controllers
         [HttpGet("getImage/{imageName}")]
         public IActionResult GetImage(string imageName)
         {
-            var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "Image/adoption_post", imageName);
+            var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "image", "adoption_post", imageName);
 
             if (!System.IO.File.Exists(filePath))
             {
                 return NotFound();
             }
 
-            var contentType = "image/jpeg";
+            var contentType = "image/jpeg"; // Adjust based on your image types
             return PhysicalFile(filePath, contentType);
         }
 
@@ -292,13 +292,6 @@ namespace NewLife_Web_api.Controllers
                 return StatusCode(500, new { message = "An error occurred while deleting the post.", error = ex.Message });
             }
         }
-
-
-
-
-
-
-
 
     }
 

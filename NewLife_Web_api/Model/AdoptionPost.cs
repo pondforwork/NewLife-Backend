@@ -91,10 +91,5 @@ namespace NewLife_Web_api.Model
         [Column("delete_at")]
         public DateTime? deleteAt { get; set; }
 
-
-
-
-
-
     }
 }
