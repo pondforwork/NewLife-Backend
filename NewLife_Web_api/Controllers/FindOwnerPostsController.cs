@@ -65,6 +65,93 @@ namespace NewLife_Web_api.Controllers
             return PhysicalFile(filePath, contentType);
         }
 
+        [HttpGet("Dogs")]
+        public async Task<IActionResult> GetDogFindOwnerPosts()
+        {
+            try
+            {
+                var query = @"SELECT 
+            fopt.find_owner_post_id, 
+            fopt.user_id, 
+            fopt.image_1, 
+            fopt.image_2, 
+            fopt.image_3, 
+            fopt.image_4, 
+            fopt.image_5, 
+            fopt.image_6, 
+            fopt.image_7, 
+            fopt.image_8, 
+            fopt.image_9, 
+            fopt.image_10, 
+            fopt.name, 
+            fopt.breed_id, 
+            fopt.sex, 
+            fopt.description, 
+            fopt.province_id, 
+            fopt.district_id, 
+            fopt.subdistrict_id, 
+            fopt.address_details, 
+            fopt.post_status, 
+            fopt.create_at, 
+            fopt.update_at, 
+            fopt.delete_at 
+        FROM 
+            find_owner_post AS fopt
+        LEFT JOIN breed b on b.breed_id = fopt.breed_id 
+        WHERE b.animal_type = 'สุนัข'";
+                List<FindOwnerPost> posts = await _context.FindOwnerPosts.FromSqlRaw(query).ToListAsync();
+                return Ok(posts);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while retrieving the posts.", error = ex.Message });
+            }
+        }
+
+        [HttpGet("Cats")]
+        public async Task<IActionResult> GetCatFindOwnerPosts()
+        {
+            try
+            {
+                var query = @"SELECT 
+            fopt.find_owner_post_id, 
+            fopt.user_id, 
+            fopt.image_1, 
+            fopt.image_2, 
+            fopt.image_3, 
+            fopt.image_4, 
+            fopt.image_5, 
+            fopt.image_6, 
+            fopt.image_7, 
+            fopt.image_8, 
+            fopt.image_9, 
+            fopt.image_10, 
+            fopt.name, 
+            fopt.breed_id, 
+            fopt.sex, 
+            fopt.description, 
+            fopt.province_id, 
+            fopt.district_id, 
+            fopt.subdistrict_id, 
+            fopt.address_details, 
+            fopt.post_status, 
+            fopt.create_at, 
+            fopt.update_at, 
+            fopt.delete_at 
+        FROM 
+            find_owner_post AS fopt
+        LEFT JOIN breed b on b.breed_id = fopt.breed_id 
+        WHERE b.animal_type = 'แมว'";
+                List<FindOwnerPost> posts = await _context.FindOwnerPosts.FromSqlRaw(query).ToListAsync();
+                return Ok(posts);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while retrieving the posts.", error = ex.Message });
+            }
+        }
+
+
         [HttpGet]
         public async Task<IActionResult> GetFindOwnerPosts()
         {

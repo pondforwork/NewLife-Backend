@@ -171,6 +171,52 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
+        [HttpGet("SpecialCare")]
+        public async Task<IActionResult> GetSpecialCarePosts()
+        {
+            try
+            {
+                var query = @"SELECT 
+            adpt.adoption_post_id, 
+            adpt.user_id, 
+            adpt.image_1, 
+            adpt.image_2, 
+            adpt.image_3, 
+            adpt.image_4, 
+            adpt.image_5, 
+            adpt.image_6, 
+            adpt.image_7, 
+            adpt.image_8, 
+            adpt.image_9, 
+            adpt.image_10, 
+            adpt.name, 
+            adpt.breed_id, 
+            adpt.age, 
+            adpt.sex, 
+            adpt.is_need_attention, 
+            adpt.description, 
+            adpt.province_id, 
+            adpt.district_id, 
+            adpt.subdistrict_id, 
+            adpt.address_details, 
+            adpt.adoption_status, 
+            adpt.post_status, 
+            adpt.create_at, 
+            adpt.update_at, 
+            adpt.delete_at 
+        FROM 
+            adoption_post AS adpt
+        WHERE adpt.is_need_attention = true";
+
+                List<AdoptionPost> posts = await _context.AdoptionPosts.FromSqlRaw(query).ToListAsync();
+                return Ok(posts);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while retrieving the special care posts.", error = ex.Message });
+            }
+        }
+
 
         [HttpGet("GetNewPet")]
         public async Task<IActionResult> GetNewPet()
