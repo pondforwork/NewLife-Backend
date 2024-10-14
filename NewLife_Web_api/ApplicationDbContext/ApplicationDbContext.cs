@@ -75,7 +75,9 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<MissingPost>()
     .ToTable("missing_post");
-        
+
+        modelBuilder.Entity<User>()
+    .ToTable("user");
 
 
         base.OnModelCreating(modelBuilder);

@@ -237,6 +237,21 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
+        //[HttpGet("user/{userId}")]
+        //public async Task<IActionResult> GetUserPosts(int userId)
+        //{
+        //    try
+        //    {
+        //        var query = "SELECT * FROM adoption_post WHERE user_id = @userId ORDER BY create_at DESC";
+        //        var posts = await _context.AdoptionPosts.FromSqlRaw(query, new MySqlParameter("@userId", userId)).ToListAsync();
+        //        return Ok(posts);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { message = "An error occurred while retrieving user posts.", error = ex.Message });
+        //    }
+        //}
+
         [HttpGet("GetPost/{id}")]
         public async Task<IActionResult> GetData(int id)
         {

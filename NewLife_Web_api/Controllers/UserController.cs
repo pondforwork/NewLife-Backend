@@ -10,6 +10,10 @@ using Microsoft.AspNetCore.Identity.Data;
 using System.Text;
 using System.Security.Cryptography;
 using System.Diagnostics;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Configuration;
 
 namespace NewLife_Web_api.Controllers
 {
@@ -20,14 +24,125 @@ namespace NewLife_Web_api.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _hostEnvironment;
-
-        public UserController(ApplicationDbContext context, IWebHostEnvironment hostEnvironment)
+        private readonly IConfiguration _configuration;
+        public UserController(ApplicationDbContext context, IWebHostEnvironment hostEnvironment, IConfiguration configuration)
         {
             _context = context;
             _hostEnvironment = hostEnvironment;
-
+            _configuration = configuration;
 
         }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromForm] RegisterDto registerDto)
+        {
+            if (await _context.Users.AnyAsync(u => u.email == registerDto.Email))
+            {
+                return BadRequest("Email already exists.");
+            }
+
+            var newUser = new User
+            {
+                email = registerDto.Email,
+                password = ComputeSha256Hash(registerDto.Password), // Hash the password
+                name = registerDto.Name,
+                lastName = registerDto.LastName,
+                tel = registerDto.Tel,
+                gender = registerDto.Gender,
+                age = registerDto.Age,
+                address = registerDto.Address,
+                career = registerDto.Career,
+                numOfFamMembers = registerDto.NumOfFamMembers ?? 0,
+                experience = registerDto.Experience,
+                sizeOfResidence = registerDto.SizeOfResidence,
+                typeOfResidence = registerDto.TypeOfResidence,
+                freeTimePerDay = registerDto.FreeTimePerDay ?? 0,
+                reasonForAdoption = registerDto.ReasonForAdoption,
+                role = "user"
+            };
+
+            if (registerDto.ProfilePic != null)
+            {
+                var imageResult = await SaveImage(registerDto.ProfilePic);
+                if (imageResult is OkObjectResult okResult)
+                {
+                    newUser.profilePic = (string)((dynamic)okResult.Value).FileName;
+                }
+            }
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { userId = newUser.userId, message = "Registration successful." });
+        }
+
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.email == loginDto.Email);
+            if (user == null || user.password != ComputeSha256Hash(loginDto.Password))
+            {
+                return Unauthorized("Invalid email or password.");
+            }
+
+            var token = GenerateJwtToken(user);
+
+            return Ok(new
+            {
+                userId = user.userId,
+                name = user.name,
+                email = user.email,
+                profilePic = user.profilePic,
+                token = token
+            });
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Role, user.role)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMonths(1),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+
+        [HttpPost("interest")]
+        public async Task<IActionResult> Interest([FromBody] InterestDto interestDto)
+        {
+            var user = await _context.Users.FindAsync(interestDto.UserId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            user.interestId1 = interestDto.InterestId1;
+            user.interestId2 = interestDto.InterestId2;
+            user.interestId3 = interestDto.InterestId3;
+            user.interestId4 = interestDto.InterestId4;
+            user.interestId5 = interestDto.InterestId5;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Pet adoption interests updated successfully." });
+        }
+
 
         [HttpPost("saveImage")]
         public async Task<IActionResult> SaveImage(IFormFile image)
@@ -293,36 +408,6 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> VerifyPasswordAsync(string email, string password)
-        {
-            try
-            {
-                string enteredPasswordHash = ComputeSha256Hash(password);
-                Debug.WriteLine(enteredPasswordHash);
-
-                var user = await _context.Users
-                    .FromSqlRaw("SELECT * FROM user WHERE email = {0}", email)
-                    .FirstOrDefaultAsync();
-
-                if (user == null || user.password != enteredPasswordHash)
-                {
-                    return Unauthorized("Invalid email or password.");
-                }
-
-                return Ok(new
-                {
-                    userId = user.userId,
-                    name = user.name,
-                    imageUrl = user.profilePic
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error during login: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
-            }
-        }
 
 
         private string ComputeSha256Hash(string rawData)
