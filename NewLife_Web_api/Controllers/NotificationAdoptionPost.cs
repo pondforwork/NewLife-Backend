@@ -34,7 +34,7 @@ namespace NewLife_Web_api.Controllers
         {
             try
             {
-                var noficationAdoptionPosts = await _context.NoficationAdoptionPosts.FromSqlRaw("SELECT notification_id,post_adoption_id,user_id,`description`,is_read,noti_date FROM notification_adoption_post WHERE user_id = @p0;",userId).ToListAsync();
+                var noficationAdoptionPosts = await _context.NoficationAdoptionPosts.FromSqlRaw("SELECT notification_id,post_adoption_id,user_id,`description`,is_read,noti_date FROM notification_adoption_post WHERE user_id = @p0 ORDER BY notification_id DESC;",userId).ToListAsync();
                 return Ok(noficationAdoptionPosts);
             }
             catch (Exception ex)
