@@ -49,7 +49,12 @@ namespace NewLife_Web_api.Controllers
             {
                 // ดึงข้อมูลจากฐานข้อมูลโดยใช้ SQL Query
                 var notificationAdoptionRequests = await _context.NotificationAdoptionRequests
-                    .FromSqlRaw("SELECT noti_adop_req_id, request_id, user_id, description, is_read, noti_date FROM notification_adoption_request WHERE noti_adop_req_id = @p0", Id)
+                    .FromSqlRaw(@"SELECT n.noti_adop_req_id , n.request_id ,n.user_id, n.is_read, n.noti_date ,n.description
+                        FROM notification_adoption_request n
+                        LEFT JOIN adoption_request ar on ar.request_id = n.request_id
+                        LEFT JOIN adoption_post ap on ap.adoption_post_id = ar.adoption_post_id
+                        WHERE ap.user_id = @p0
+                    ", Id)
                     .ToListAsync();
 
                 // การจัดการกับค่า NULL สำหรับ is_read และ noti_date
