@@ -16,7 +16,8 @@ namespace NewLife_Web_api.Model
         public string? Address { get; set; }
         public string? Career { get; set; }
         public int? NumOfFamMembers { get; set; }
-        public string? Experience { get; set; }
+        public bool? IsHaveExperience { get; set; }
+
         public string? SizeOfResidence { get; set; }
         public string? TypeOfResidence { get; set; }
         public int? FreeTimePerDay { get; set; }
@@ -26,7 +27,7 @@ namespace NewLife_Web_api.Model
         public int? InterestId3 { get; set; }
         public int? InterestId4 { get; set; }
         public int? InterestId5 { get; set; }
-
+        public int? MonthlyIncome { get; set; }
         public List<int> InterestedBreedIds { get; set; }
     }
 }

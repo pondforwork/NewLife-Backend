@@ -45,8 +45,8 @@ namespace NewLife_Web_api.Model
         [Column("num_of_fam_members")]
         public int numOfFamMembers { get; set; }
 
-        [Column("experience")]
-        public string experience { get; set; }
+        [Column("is_have_experience")]
+        public bool? isHaveExperience { get; set; }
 
         [Column("size_of_residence")]
         public string sizeOfResidence { get; set; }
@@ -59,6 +59,9 @@ namespace NewLife_Web_api.Model
 
         [Column("reason_for_adoption")]
         public string reasonForAdoption { get; set; }
+
+        [Column("monthly_income")]
+        public int? monthlyIncome { get; set; }
 
         [Column("interest_id_1")]
         public int? interestId1 { get; set; }

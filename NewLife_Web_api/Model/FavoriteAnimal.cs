@@ -19,12 +19,5 @@ namespace NewLife_Web_api.Model
         [Column("date_added")]
         public DateTime dateAdded { get; set; }
 
-
-
-
-
-
-
-
     }
 }

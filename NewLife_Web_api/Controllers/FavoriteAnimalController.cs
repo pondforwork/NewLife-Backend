@@ -91,18 +91,49 @@ namespace NewLife_Web_api.Controllers
                 return BadRequest(new { message = "Post data is invalid." });
             }
 
+            // ตรวจสอบว่าผู้ใช้ได้ทำการ Favorite โพสต์นี้ไปแล้วหรือยัง
+            var existingFavorite = await _context.FavoriteAnimals
+                .FirstOrDefaultAsync(f => f.userId == newPost.userId && f.adoptionPostId == newPost.adoptionPostId);
+
+            if (existingFavorite != null)
+            {
+                return BadRequest("You have already favorited this post.");
+            }
+
             try
             {
-                var query = "INSERT INTO favorite_animal ( user_id, adoption_post_id, date_added) " +
-                                           "VALUES (@p0, @p1, @p2)";
-                await _context.Database.ExecuteSqlRawAsync(query, newPost.userId, newPost.adoptionPostId, newPost.dateAdded);
-                return Ok("Create favorite animal Success");
+                newPost.dateAdded = DateTime.Now; // ตั้งค่าวันที่เพิ่ม
+                _context.FavoriteAnimals.Add(newPost);
+                await _context.SaveChangesAsync();
+
+                return Ok("Favorite post successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = "An error occurred while creating the favorite animal.", error = ex.Message });
+                return BadRequest(new { message = "An error occurred while favoriting the post.", error = ex.Message });
             }
         }
+
+        //[HttpPost]
+        //public async Task<IActionResult> Create([FromBody] FavoriteAnimal newPost)
+        //{
+        //    if (newPost == null)
+        //    {
+        //        return BadRequest(new { message = "Post data is invalid." });
+        //    }
+
+        //    try
+        //    {
+        //        var query = "INSERT INTO favorite_animal ( user_id, adoption_post_id, date_added) " +
+        //                                   "VALUES (@p0, @p1, @p2)";
+        //        await _context.Database.ExecuteSqlRawAsync(query, newPost.userId, newPost.adoptionPostId, newPost.dateAdded);
+        //        return Ok("Create favorite animal Success");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { message = "An error occurred while creating the favorite animal.", error = ex.Message });
+        //    }
+        //}
 
         [HttpPatch]
         public async Task<IActionResult> Update([FromBody] FavoriteAnimal favorite)
@@ -136,11 +167,6 @@ namespace NewLife_Web_api.Controllers
                 return BadRequest(new { message = "An error occurred while updating the favorite animal.", error = ex.Message });
             }
         }
-
-
-
-
-
     }
 }
 

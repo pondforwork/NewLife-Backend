@@ -53,11 +53,12 @@ namespace NewLife_Web_api.Controllers
                 address = registerDto.Address,
                 career = registerDto.Career,
                 numOfFamMembers = registerDto.NumOfFamMembers ?? 0,
-                experience = registerDto.Experience,
+                isHaveExperience = registerDto.IsHaveExperience,
                 sizeOfResidence = registerDto.SizeOfResidence,
                 typeOfResidence = registerDto.TypeOfResidence,
                 freeTimePerDay = registerDto.FreeTimePerDay ?? 0,
                 reasonForAdoption = registerDto.ReasonForAdoption,
+                monthlyIncome = registerDto.MonthlyIncome ?? 0,
                 role = "user",
                 interestId1 = registerDto.InterestedBreedIds.Count > 0 ? registerDto.InterestedBreedIds[0] : null,
                 interestId2 = registerDto.InterestedBreedIds.Count > 1 ? registerDto.InterestedBreedIds[1] : null,
@@ -238,12 +239,17 @@ namespace NewLife_Web_api.Controllers
         {
             try
             {
-                var users = await _context.Users.FromSqlRaw("SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, num_of_fam_members, experience, size_of_residence, type_of_residence, free_time_per_day, reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5  FROM user;").ToListAsync();
+                var users = await _context.Users.FromSqlRaw(@"
+            SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, 
+            age, career, num_of_fam_members, is_have_experience, size_of_residence, 
+            type_of_residence, free_time_per_day, reason_for_adoption, monthly_income, 
+            interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5  
+            FROM user;").ToListAsync();
+
                 return Ok(users);
             }
             catch (Exception ex)
             {
-                // Log the exception (ex) here as needed
                 return BadRequest(new { message = "An error occurred while retrieving the posts.", error = ex.Message });
             }
         }
@@ -255,7 +261,13 @@ namespace NewLife_Web_api.Controllers
             try
             {
                 var user = await _context.Users
-                    .FromSqlRaw("SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, num_of_fam_members, experience, size_of_residence, type_of_residence, free_time_per_day, reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5 FROM user WHERE user_id = {0}", Id)
+                    .FromSqlRaw(@"
+                SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, 
+                num_of_fam_members, is_have_experience, size_of_residence, type_of_residence, 
+                free_time_per_day, reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, 
+                interest_id_4, interest_id_5, monthly_income 
+                FROM user 
+                WHERE user_id = {0}", Id)
                     .FirstOrDefaultAsync();
 
                 if (user == null)
@@ -270,6 +282,7 @@ namespace NewLife_Web_api.Controllers
                 return StatusCode(500, "An error occurred while retrieving the user.");
             }
         }
+
 
         [HttpPost("Saveuser")]
         public async Task<IActionResult> CreateUser([FromForm] User user, IFormFile image)
@@ -318,7 +331,6 @@ namespace NewLife_Web_api.Controllers
                 new MySqlParameter("@age", user.age),
                 new MySqlParameter("@career", user.career ?? (object)DBNull.Value),
                 new MySqlParameter("@num_of_fam_members", user.numOfFamMembers),
-                new MySqlParameter("@experience", user.experience ?? (object)DBNull.Value),
                 new MySqlParameter("@size_of_residence", user.sizeOfResidence ?? (object)DBNull.Value),
                 new MySqlParameter("@type_of_residence", user.typeOfResidence ?? (object)DBNull.Value),
                 new MySqlParameter("@free_time_per_day", user.freeTimePerDay),
@@ -342,7 +354,6 @@ namespace NewLife_Web_api.Controllers
 
             return Ok(new { message = "User created successfully." });
         }
-
         [HttpPatch("UpdateUser")]
         public async Task<IActionResult> UpdateUser([FromForm] User user, IFormFile? image)
         {
@@ -370,57 +381,60 @@ namespace NewLife_Web_api.Controllers
             }
 
             var sqlQuery = @"
-                UPDATE user SET
-                    profile_pic = @profile_pic, 
-                    `name` = @name, 
-                    lastname = @lastname, 
-                    email = @email, 
-                    `password` = @password, 
-                    `role` = @role, 
-                    tel = @tel, 
-                    gender = @gender, 
-                    age = @age, 
-                    career = @career, 
-                    num_of_fam_members = @num_of_fam_members, 
-                    experience = @experience, 
-                    size_of_residence = @size_of_residence, 
-                    type_of_residence = @type_of_residence, 
-                    free_time_per_day = @free_time_per_day, 
-                    reason_for_adoption = @reason_for_adoption, 
-                    interest_id_1 = @interest_id_1, 
-                    interest_id_2 = @interest_id_2, 
-                    interest_id_3 = @interest_id_3, 
-                    interest_id_4 = @interest_id_4, 
-                    interest_id_5 = @interest_id_5, 
-                    address = @address
-                WHERE user_id = @user_id";
+        UPDATE user SET
+            profile_pic = @profile_pic, 
+            `name` = @name, 
+            lastname = @lastname, 
+            email = @email, 
+            `password` = @password, 
+            `role` = @role, 
+            tel = @tel, 
+            gender = @gender, 
+            age = @age, 
+            career = @career, 
+            num_of_fam_members = @num_of_fam_members, 
+            is_have_experience = @is_have_experience, 
+            experience = @experience, 
+            size_of_residence = @size_of_residence, 
+            type_of_residence = @type_of_residence, 
+            free_time_per_day = @free_time_per_day, 
+            reason_for_adoption = @reason_for_adoption, 
+            interest_id_1 = @interest_id_1, 
+            interest_id_2 = @interest_id_2, 
+            interest_id_3 = @interest_id_3, 
+            interest_id_4 = @interest_id_4, 
+            interest_id_5 = @interest_id_5, 
+            monthly_income = @monthly_income,
+            address = @address
+        WHERE user_id = @user_id";
 
-                        var parameters = new[]
-                        {
-                            new MySqlParameter("@profile_pic", !string.IsNullOrEmpty(imageFileName) ? (object)imageFileName : DBNull.Value),
-                            new MySqlParameter("@name", user.name ?? (object)DBNull.Value),
-                            new MySqlParameter("@lastname", user.lastName ?? (object)DBNull.Value),
-                            new MySqlParameter("@email", user.email ?? (object)DBNull.Value),
-                            new MySqlParameter("@password", user.password ?? (object)DBNull.Value),
-                            new MySqlParameter("@role", user.role ?? (object)DBNull.Value),
-                            new MySqlParameter("@tel", user.tel ?? (object)DBNull.Value),
-                            new MySqlParameter("@gender", user.gender ?? (object)DBNull.Value),
-                            new MySqlParameter("@age", user.age),
-                            new MySqlParameter("@career", user.career ?? (object)DBNull.Value),
-                            new MySqlParameter("@num_of_fam_members", user.numOfFamMembers),
-                            new MySqlParameter("@experience", user.experience ?? (object)DBNull.Value),
-                            new MySqlParameter("@size_of_residence", user.sizeOfResidence ?? (object)DBNull.Value),
-                            new MySqlParameter("@type_of_residence", user.typeOfResidence ?? (object)DBNull.Value),
-                            new MySqlParameter("@free_time_per_day", user.freeTimePerDay),
-                            new MySqlParameter("@reason_for_adoption", user.reasonForAdoption ?? (object)DBNull.Value),
-                            new MySqlParameter("@interest_id_1", user.interestId1.HasValue ? (object)user.interestId1.Value : DBNull.Value),
-                            new MySqlParameter("@interest_id_2", user.interestId2.HasValue ? (object)user.interestId2.Value : DBNull.Value),
-                            new MySqlParameter("@interest_id_3", user.interestId3.HasValue ? (object)user.interestId3.Value : DBNull.Value),
-                            new MySqlParameter("@interest_id_4", user.interestId4.HasValue ? (object)user.interestId4.Value : DBNull.Value),
-                            new MySqlParameter("@interest_id_5", user.interestId5.HasValue ? (object)user.interestId5.Value : DBNull.Value),
-                            new MySqlParameter("@address", user.address ?? (object)DBNull.Value),
-                            new MySqlParameter("@user_id", user.userId)
-                        };
+            var parameters = new[]
+            {
+        new MySqlParameter("@profile_pic", !string.IsNullOrEmpty(imageFileName) ? (object)imageFileName : DBNull.Value),
+        new MySqlParameter("@name", user.name ?? (object)DBNull.Value),
+        new MySqlParameter("@lastname", user.lastName ?? (object)DBNull.Value),
+        new MySqlParameter("@email", user.email ?? (object)DBNull.Value),
+        new MySqlParameter("@password", user.password ?? (object)DBNull.Value),
+        new MySqlParameter("@role", user.role ?? (object)DBNull.Value),
+        new MySqlParameter("@tel", user.tel ?? (object)DBNull.Value),
+        new MySqlParameter("@gender", user.gender ?? (object)DBNull.Value),
+        new MySqlParameter("@age", user.age),
+        new MySqlParameter("@career", user.career ?? (object)DBNull.Value),
+        new MySqlParameter("@num_of_fam_members", user.numOfFamMembers),
+        new MySqlParameter("@is_have_experience", user.isHaveExperience.HasValue ? (object)user.isHaveExperience.Value : DBNull.Value),
+        new MySqlParameter("@size_of_residence", user.sizeOfResidence ?? (object)DBNull.Value),
+        new MySqlParameter("@type_of_residence", user.typeOfResidence ?? (object)DBNull.Value),
+        new MySqlParameter("@free_time_per_day", user.freeTimePerDay),
+        new MySqlParameter("@reason_for_adoption", user.reasonForAdoption ?? (object)DBNull.Value),
+        new MySqlParameter("@interest_id_1", user.interestId1.HasValue ? (object)user.interestId1.Value : DBNull.Value),
+        new MySqlParameter("@interest_id_2", user.interestId2.HasValue ? (object)user.interestId2.Value : DBNull.Value),
+        new MySqlParameter("@interest_id_3", user.interestId3.HasValue ? (object)user.interestId3.Value : DBNull.Value),
+        new MySqlParameter("@interest_id_4", user.interestId4.HasValue ? (object)user.interestId4.Value : DBNull.Value),
+        new MySqlParameter("@interest_id_5", user.interestId5.HasValue ? (object)user.interestId5.Value : DBNull.Value),
+        new MySqlParameter("@interest_id_5", user.monthlyIncome.HasValue ? (object)user.monthlyIncome.Value : DBNull.Value),
+        new MySqlParameter("@address", user.address ?? (object)DBNull.Value),
+        new MySqlParameter("@user_id", user.userId)
+    };
 
             try
             {
@@ -434,16 +448,19 @@ namespace NewLife_Web_api.Controllers
             return Ok(new { message = "User updated successfully." });
         }
 
-
-
-
         [HttpDelete("{Id}")]
         public async Task<IActionResult> DeleteUser(int Id)
         {
             try
             {
                 var user = await _context.Users
-                    .FromSqlRaw("SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, num_of_fam_members, experience, size_of_residence, type_of_residence, free_time_per_day, reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5 FROM user WHERE user_id = {0}", Id)
+                    .FromSqlRaw(@"
+                SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, 
+                num_of_fam_members, is_have_experience, size_of_residence, 
+                type_of_residence, free_time_per_day, reason_for_adoption, interest_id_1, 
+                interest_id_2, interest_id_3, interest_id_4, interest_id_5, monthly_income 
+                FROM user 
+                WHERE user_id = {0}", Id)
                     .FirstOrDefaultAsync();
 
                 if (user == null)
