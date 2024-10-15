@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using NewLife_Web_api.Model;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 public class Interest
@@ -15,6 +16,5 @@ public class Interest
 
     [Column("sex")]
     public string sex { get; set; }
-
 
 }

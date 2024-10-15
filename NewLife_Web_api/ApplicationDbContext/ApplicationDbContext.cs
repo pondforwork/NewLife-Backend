@@ -52,6 +52,15 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+     
+
+        modelBuilder.Entity<Breed>(entity =>
+        {
+            entity.ToTable("breed");
+            entity.HasKey(e => e.breedId);
+        });
+
         modelBuilder.Entity<ReportAdoptionPost>()
             .ToTable("report_adoption_post");
 
@@ -79,6 +88,11 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<User>()
     .ToTable("user");
 
+        modelBuilder.Entity<AdoptionPost>(entity =>
+        {
+            entity.ToTable("adoption_post");  // กำหนดชื่อตารางให้ตรงกับในฐานข้อมูล
+            entity.HasKey(e => e.adoptionPostId);  // กำหนดคีย์หลักของตาราง
+        });
 
         base.OnModelCreating(modelBuilder);
 

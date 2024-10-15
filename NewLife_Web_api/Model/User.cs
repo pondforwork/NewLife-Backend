@@ -74,6 +74,9 @@ namespace NewLife_Web_api.Model
 
         [Column("interest_id_5")]
         public int? interestId5 { get; set; }
+
+ 
+
     }
 
 }

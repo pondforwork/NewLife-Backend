@@ -58,7 +58,12 @@ namespace NewLife_Web_api.Controllers
                 typeOfResidence = registerDto.TypeOfResidence,
                 freeTimePerDay = registerDto.FreeTimePerDay ?? 0,
                 reasonForAdoption = registerDto.ReasonForAdoption,
-                role = "user"
+                role = "user",
+                interestId1 = registerDto.InterestedBreedIds.Count > 0 ? registerDto.InterestedBreedIds[0] : null,
+                interestId2 = registerDto.InterestedBreedIds.Count > 1 ? registerDto.InterestedBreedIds[1] : null,
+                interestId3 = registerDto.InterestedBreedIds.Count > 2 ? registerDto.InterestedBreedIds[2] : null,
+                interestId4 = registerDto.InterestedBreedIds.Count > 3 ? registerDto.InterestedBreedIds[3] : null,
+                interestId5 = registerDto.InterestedBreedIds.Count > 4 ? registerDto.InterestedBreedIds[4] : null
             };
 
             if (registerDto.ProfilePic != null)
@@ -70,6 +75,14 @@ namespace NewLife_Web_api.Controllers
                 }
             }
 
+            //if (registerDto.InterestedBreedIds != null && registerDto.InterestedBreedIds.Count > 0)
+            //{
+            //    newUser.breedInterest1 = registerDto.InterestedBreedIds.Count > 0 ? registerDto.InterestedBreedIds[0] : null;
+            //    newUser.breedInterest2 = registerDto.InterestedBreedIds.Count > 1 ? registerDto.InterestedBreedIds[1] : null;
+            //    newUser.breedInterest3 = registerDto.InterestedBreedIds.Count > 2 ? registerDto.InterestedBreedIds[2] : null;
+            //    newUser.breedInterest4 = registerDto.InterestedBreedIds.Count > 3 ? registerDto.InterestedBreedIds[3] : null;
+            //    newUser.breedInterest5 = registerDto.InterestedBreedIds.Count > 4 ? registerDto.InterestedBreedIds[4] : null;
+            //}
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
@@ -122,9 +135,8 @@ namespace NewLife_Web_api.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-
         [HttpPost("interest")]
-        public async Task<IActionResult> Interest([FromBody] InterestDto interestDto)
+        public async Task<IActionResult> UpdateInterest([FromBody] InterestDto interestDto)
         {
             var user = await _context.Users.FindAsync(interestDto.UserId);
             if (user == null)
@@ -132,17 +144,58 @@ namespace NewLife_Web_api.Controllers
                 return NotFound("User not found.");
             }
 
-            user.interestId1 = interestDto.InterestId1;
-            user.interestId2 = interestDto.InterestId2;
-            user.interestId3 = interestDto.InterestId3;
-            user.interestId4 = interestDto.InterestId4;
-            user.interestId5 = interestDto.InterestId5;
+            // ตรวจสอบว่าสายพันธุ์ที่สนใจมีอยู่จริงหรือไม่
+            var validBreedIds = await _context.Breeds
+                .Where(b => interestDto.BreedIds.Contains(b.breedId))
+                .Select(b => b.breedId)
+                .ToListAsync();
+
+            if (validBreedIds.Count == 0)
+            {
+                return BadRequest("Invalid breed IDs provided.");
+            }
+
+            user.interestId1 = validBreedIds.Count > 0 ? validBreedIds[0] : null;
+            user.interestId2 = validBreedIds.Count > 1 ? validBreedIds[1] : null;
+            user.interestId3 = validBreedIds.Count > 2 ? validBreedIds[2] : null;
+            user.interestId4 = validBreedIds.Count > 3 ? validBreedIds[3] : null;
+            user.interestId5 = validBreedIds.Count > 4 ? validBreedIds[4] : null;
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Pet adoption interests updated successfully." });
+            return Ok(new { message = "Pet breed interests updated successfully." });
         }
 
+
+
+
+        [HttpGet("user-interests/{userId}")]
+        public async Task<IActionResult> GetUserInterests(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var breedIds = new[] { user.interestId1, user.interestId2, user.interestId3, user.interestId4, user.interestId5 }
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .ToList();
+
+            var breeds = await _context.Breeds
+                .Where(b => breedIds.Contains(b.breedId))
+                .ToListAsync();
+
+            var result = breeds.Select(b => new
+            {
+                BreedId = b.breedId,
+                AnimalType = b.animalType,
+                BreedName = b.breedName
+            });
+
+            return Ok(result);
+        }
 
         [HttpPost("saveImage")]
         public async Task<IActionResult> SaveImage(IFormFile image)

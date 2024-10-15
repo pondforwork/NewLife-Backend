@@ -125,6 +125,7 @@ namespace NewLife_Web_api.Controllers
         }
 
 
+
         [HttpGet("Cats")]
         public async Task<IActionResult> GetCatPosts()
         {
@@ -237,20 +238,75 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-        //[HttpGet("user/{userId}")]
-        //public async Task<IActionResult> GetUserPosts(int userId)
+        //[HttpGet("recommended/{userId}")]
+        //public async Task<IActionResult> GetRecommendedPosts(int userId)
         //{
-        //    try
-        //    {
-        //        var query = "SELECT * FROM adoption_post WHERE user_id = @userId ORDER BY create_at DESC";
-        //        var posts = await _context.AdoptionPosts.FromSqlRaw(query, new MySqlParameter("@userId", userId)).ToListAsync();
-        //        return Ok(posts);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new { message = "An error occurred while retrieving user posts.", error = ex.Message });
-        //    }
+
+        //    var user = await _context.Users.FindAsync(userId);
+        //    if (user == null)
+        //        return NotFound("User not found.");
+
+        //    // ดึงข้อมูลสายพันธุ์สัตว์ที่userสนใจ
+        //    var interestedBreeds = new[] { user.interestId1, user.interestId2, user.interestId3, user.interestId4, user.interestId5 }
+        //        .Where(id => id.HasValue)
+        //        .Select(id => id.Value)
+        //        .ToList();
+
+
+        //    if (!interestedBreeds.Any())
+        //        return Ok(new List<AdoptionPost>());
+
+        //    // ดึงโพสต์ทั้งหมดที่ตรงกับสายพันธุ์ที่ผู้ใช้สนใจ โดยไม่กรองสถานะ
+        //    var recommendedPosts = await _context.AdoptionPosts
+        //        .Where(p => interestedBreeds.Contains(p.breedId) && p.userId != userId) 
+        //        .ToListAsync();
+
+        //    return Ok(recommendedPosts);
         //}
+
+
+        [HttpGet("recommended/{userId}")]
+        public async Task<IActionResult> GetRecommendedPosts(int userId)
+        {
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound("User not found.");
+
+            var interestedBreeds = new[] { user.interestId1, user.interestId2, user.interestId3, user.interestId4, user.interestId5 }
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .ToList();
+
+  
+            if (!interestedBreeds.Any())
+            {
+                var allPosts = await _context.AdoptionPosts.ToListAsync();
+                return Ok(allPosts);
+            }
+
+
+            var recommendedPosts = await _context.AdoptionPosts
+                .Where(p => interestedBreeds.Contains(p.breedId))
+                .ToListAsync();
+
+            return Ok(recommendedPosts);
+        }
+
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetUserPosts(int userId)
+        {
+            try
+            {
+                var query = "SELECT * FROM adoption_post WHERE user_id = @userId ORDER BY create_at DESC";
+                var posts = await _context.AdoptionPosts.FromSqlRaw(query, new MySqlParameter("@userId", userId)).ToListAsync();
+                return Ok(posts);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while retrieving user posts.", error = ex.Message });
+            }
+        }
 
         [HttpGet("GetPost/{id}")]
         public async Task<IActionResult> GetData(int id)

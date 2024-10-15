@@ -14,6 +14,5 @@ namespace NewLife_Web_api.Model
 
         [Column("breed_name")]
         public string breedName { get; set; }
-
     }
 }
