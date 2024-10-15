@@ -47,6 +47,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<MissingPost> MissingPosts { get; set; }
 
+    public DbSet<AdoptionPostMetadata> AdoptionPostMetadata { get; set; }
 
 
 
