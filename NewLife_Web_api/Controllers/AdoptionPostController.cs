@@ -9,6 +9,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
+using System.Net.Http.Headers;
+using System.Net.Http;
 
 namespace NewLife_Web_api.Controllers
 {
@@ -304,7 +306,7 @@ namespace NewLife_Web_api.Controllers
                 .Select(id => id.Value)
                 .ToList();
 
-  
+
             if (!interestedBreeds.Any())
             {
                 var allPosts = await _context.AdoptionPosts.ToListAsync();
@@ -582,7 +584,8 @@ namespace NewLife_Web_api.Controllers
                                 // เช็คก่อนว่า ในระบบมีรูปนี้แล้วหรือไม่
                                 AdoptionImage? existedImage = _context.AdoptionImage.FromSqlRaw("SELECT adoption_image_id, image_name FROM adoption_image WHERE image_name = ?", imageValue).FirstOrDefault();
                                 // ถ้าไม่มี ให้ insert ถ้ามี ข้าม
-                                if (existedImage == null) {
+                                if (existedImage == null)
+                                {
                                     Debug.WriteLine($"{propertyName}: {imageValue}");
                                     _context.Database.ExecuteSqlRaw("INSERT INTO adoption_image (image_name,is_processed,pet_type,adoption_post_id) " +
                                                                     "VALUES(?,false,?,?)", imageValue, details.animal_type, details.adoption_post_id);
@@ -600,6 +603,54 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
+        [HttpGet("extractVector")]
+        public async Task<IActionResult> ProcessAdoptionImages()
+        {
+            List<AdoptionImage> adoptionImages = _context.AdoptionImage
+                .FromSqlRaw("SELECT adoption_image_id, image_name FROM adoption_image WHERE is_processed = false")
+                .ToList();
+
+            foreach (var adoptionImage in adoptionImages)
+            {
+                string imageName = adoptionImage.imageName;
+                var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "image", "adoption_post", imageName);
+
+                if (!System.IO.File.Exists(filePath))
+                {
+                    // ถ้าไม่เจอไฟล์ ให้ข้าม Loop ไปเลย
+                    continue;
+                }
+
+                // Send image to the NestJS API
+                using (var httpClient = new HttpClient())
+                {
+                    using (var form = new MultipartFormDataContent())
+                    {
+                        byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                        var byteArrayContent = new ByteArrayContent(fileBytes);
+                        byteArrayContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg"); // Adjust the content type if needed
+
+                        form.Add(byteArrayContent, "file", imageName);
+
+                        string description = "Sample description of the image";
+                        form.Add(new StringContent(description), "description");
+
+                        var response = await httpClient.PostAsync("http://localhost:3000/posts", form);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            _context.Database.ExecuteSqlRaw("UPDATE adoption_image SET is_processed = true WHERE adoption_image_id = ?", adoptionImage.adoptionImageId);
+                        }
+                        else
+                        {
+                            // Handle unsuccessful response from the API
+                            Debug.WriteLine($"Failed to upload image {imageName}. Status Code: {response.StatusCode}");
+                        }
+                    }
+                }
+            }
+            return Ok("Image processing completed.");
+        }
     }
 
 
