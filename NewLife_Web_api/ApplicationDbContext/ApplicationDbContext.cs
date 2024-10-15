@@ -49,6 +49,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<AdoptionPostMetadata> AdoptionPostMetadata { get; set; }
 
+    public DbSet<AdoptionImage> AdoptionImage { get; set; }
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

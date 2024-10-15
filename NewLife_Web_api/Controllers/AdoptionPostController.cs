@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using MySqlConnector;
 using NewLife_Web_api.Model;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
@@ -526,6 +527,76 @@ namespace NewLife_Web_api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred while deleting the post.", error = ex.Message });
+            }
+        }
+
+
+        [HttpGet("addImageData")]
+        public async Task<IActionResult> AddImageToDatabase()
+        {
+            List<int> image_names = [];
+            try
+            {
+                var query = @"
+                    SELECT 
+                        ap.adoption_post_id, 
+                        CASE 
+                            WHEN b.animal_type = 'สุนัข' THEN 'dog' 
+                            WHEN b.animal_type = 'แมว' THEN 'cat' 
+                            ELSE 'unknown' 
+                        END AS animal_type, 
+                        ap.image_1, 
+                        ap.image_2, 
+                        ap.image_3, 
+                        ap.image_4, 
+                        ap.image_5, 
+                        ap.image_6, 
+                        ap.image_7, 
+                        ap.image_8, 
+                        ap.image_9, 
+                        ap.image_10
+                    FROM 
+                        adoption_post ap 
+                    LEFT JOIN 
+                        breed b ON b.breed_id = ap.breed_id
+                    WHERE 
+                        ap.create_at >= CURDATE() - INTERVAL 2 DAY;
+                ";
+
+                var adoptionPostMetadata = await _context.AdoptionPostMetadata
+                    .FromSqlRaw(query)
+                    .ToListAsync();
+
+                foreach (AdoptionPostMetadata details in adoptionPostMetadata)
+                {
+                    Debug.WriteLine($"Adoption Post ID: {details.adoption_post_id}, Animal Type: {details.animal_type}");
+                    for (int i = 1; i <= 10; i++)
+                    {
+                        string propertyName = $"image_{i}";
+                        var propertyInfo = typeof(AdoptionPostMetadata).GetProperty(propertyName);
+                        if (propertyInfo != null)
+                        {
+                            string imageValue = (string)propertyInfo.GetValue(details);
+                            if (!string.IsNullOrEmpty(imageValue))
+                            {
+                                // เช็คก่อนว่า ในระบบมีรูปนี้แล้วหรือไม่
+                                AdoptionImage? existedImage = _context.AdoptionImage.FromSqlRaw("SELECT adoption_image_id, image_name FROM adoption_image WHERE image_name = ?", imageValue).FirstOrDefault();
+                                // ถ้าไม่มี ให้ insert ถ้ามี ข้าม
+                                if (existedImage == null) {
+                                    Debug.WriteLine($"{propertyName}: {imageValue}");
+                                    _context.Database.ExecuteSqlRaw("INSERT INTO adoption_image (image_name,is_processed,pet_type,adoption_post_id) " +
+                                                                    "VALUES(?,false,?,?)", imageValue, details.animal_type, details.adoption_post_id);
+                                }
+                            }
+                        }
+                    }
+                }
+                return Ok(adoptionPostMetadata);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error in AddImageToDatabase: {ex.Message}");
+                return BadRequest(new { message = "An error occurred while retrieving data.", error = ex.Message });
             }
         }
 
