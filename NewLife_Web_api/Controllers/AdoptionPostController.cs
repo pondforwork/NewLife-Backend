@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using MySqlConnector;
 using NewLife_Web_api.Model;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -23,7 +24,6 @@ namespace NewLife_Web_api.Controllers
             _context = context;
             _hostEnvironment = hostEnvironment;
         }
-
         [HttpPost("SaveAdoptionPostImage")]
         public async Task<IActionResult> SaveAdoptionPostImage(IFormFile image)
         {
@@ -31,17 +31,28 @@ namespace NewLife_Web_api.Controllers
             {
                 return BadRequest("No image uploaded.");
             }
+
             var uploadsFolder = Path.Combine(_hostEnvironment.ContentRootPath, "image", "adoption_post");
+
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
             }
-            string filePath = Path.Combine(uploadsFolder, image.FileName);
+
+            string timestamp = DateTime.Now.ToString("yyyyMMddHHmmssfff", CultureInfo.InvariantCulture); // e.g., 20241015123456789
+            string fileExtension = Path.GetExtension(image.FileName); // Get the file extension of the uploaded image
+            string newFileName = $"{timestamp}{fileExtension}"; // Create the new filename with the timestamp
+
+            string filePath = Path.Combine(uploadsFolder, newFileName); // Combine path with the new filename
+
+            // Save the image to the specified location
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await image.CopyToAsync(stream);
             }
-            return Ok(new { FileName = image.FileName });
+
+            // Return the new filename as part of the response
+            return Ok(new { FileName = newFileName });
         }
 
         [HttpGet("getImage/{imageName}")]
