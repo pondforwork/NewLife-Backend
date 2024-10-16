@@ -19,7 +19,7 @@ namespace NewLife_Web_api.Model
         public string description { get; set; }
 
         [Column("is_read")]
-        public int isRead { get; set; }
+        public int? isRead { get; set; } = 0;
 
         [Column("noti_date")]
         public DateTime notiDate { get; set; }

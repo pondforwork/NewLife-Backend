@@ -99,6 +99,29 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.adoptionPostId);  // กำหนดคีย์หลักของตาราง
         });
 
+        modelBuilder.Entity<AdoptionRequest>(entity =>
+        {
+            entity.ToTable("adoption_request");
+            entity.HasKey(e => e.RequestId);
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.AdoptionRequests)
+                .HasForeignKey(e => e.UserId);
+            entity.HasOne(e => e.AdoptionPost)
+                .WithMany()
+                .HasForeignKey(e => e.AdoptionPostId);
+        });
+
+        modelBuilder.Entity<NotificationAdoptionRequest>(entity =>
+        {
+            entity.ToTable("notification_adoption_request");
+            entity.HasKey(e => e.NotiAdopReqId);
+            entity.HasOne(n => n.AdoptionRequest)
+                .WithMany(ar => ar.Notifications)
+                .HasForeignKey(n => n.RequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+
         base.OnModelCreating(modelBuilder);
 
 

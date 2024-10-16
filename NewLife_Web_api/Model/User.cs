@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace NewLife_Web_api.Model
 {
@@ -78,7 +79,8 @@ namespace NewLife_Web_api.Model
         [Column("interest_id_5")]
         public int? interestId5 { get; set; }
 
- 
+        [JsonIgnore]
+        public ICollection<AdoptionRequest> AdoptionRequests { get; set; }
 
     }
 

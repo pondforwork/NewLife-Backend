@@ -14,179 +14,440 @@ namespace NewLife_Web_api.Controllers
         {
             _context = context;
         }
-        [HttpGet]
-        public async Task<IActionResult> GetList()
+
+        //เจ้าของโพสต์จะได้รับการแจ้งเตือนผ่าน GetNotificationsForPostOwner
+        [HttpGet("post-owner/{userId}")]
+        public async Task<IActionResult> GetNotificationsForPostOwner(int userId)
         {
             try
             {
-                var notificationAdopReq = await _context.NotificationAdoptionRequests
-                    .FromSqlRaw("SELECT noti_adop_req_id, request_id, user_id, description, is_read, noti_date FROM notification_adoption_request")
+                var notifications = await _context.NotificationAdoptionRequests
+                    .Include(n => n.AdoptionRequest)
+                    .ThenInclude(ar => ar.User)
+                    .Include(n => n.AdoptionRequest.AdoptionPost)
+                    .Where(n => n.AdoptionRequest.AdoptionPost.userId == userId && n.AdoptionRequest.Status == "waiting")
+                    .Select(n => new
+                    {
+                        n.NotiAdopReqId,
+                        n.RequestId,
+                        n.NotiDate,
+                        n.Description,
+                        n.IsRead,
+                        AdoptionPost = new
+                        {
+                            n.AdoptionRequest.AdoptionPostId,
+                            n.AdoptionRequest.AdoptionPost.name,
+                            n.AdoptionRequest.AdoptionPost.Image1,
+                        },
+                        RequestingUser = new
+                        {
+                            n.AdoptionRequest.User.userId,
+                            n.AdoptionRequest.User.name,
+                            n.AdoptionRequest.User.email,
+                            n.AdoptionRequest.User.profilePic,
+                        }
+                    })
+                    .OrderByDescending(n => n.NotiDate)
                     .ToListAsync();
 
-                // การจัดการกับค่า NULL สำหรับ is_read และ noti_date
-                var processedList = notificationAdopReq.Select(n => new
-                {
-                    n.notiAdopReqId,
-                    n.requestId,
-                    n.userId,
-                    n.description,
-                    isRead = n.isRead.HasValue ? n.isRead.Value : (int?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า isRead เป็น null
-                    notiDate = n.notiDate.HasValue ? n.notiDate.Value : (DateTime?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า notiDate เป็น null
-                }).ToList();
-
-                return Ok(processedList);
+                return Ok(notifications);
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = "An error occurred while retrieving the Notification Adoption Request.", error = ex.Message });
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
 
-        [HttpGet("GetList/{Id}")]
-        public async Task<IActionResult> GetListById(int Id)
+
+        //ผู้ขอสามารถดูผลการอนุมัติหรือปฏิเสธผ่าน GetNotificationsForRequester
+        [HttpGet("requester/{userId}")]
+        public async Task<IActionResult> GetNotificationsForRequester(int userId)
         {
             try
             {
-                // ดึงข้อมูลจากฐานข้อมูลโดยใช้ SQL Query
-                var notificationAdoptionRequests = await _context.NotificationAdoptionRequests
-                    .FromSqlRaw(@"SELECT n.noti_adop_req_id , n.request_id ,n.user_id, n.is_read, n.noti_date ,n.description
-                        FROM notification_adoption_request n
-                        LEFT JOIN adoption_request ar on ar.request_id = n.request_id
-                        LEFT JOIN adoption_post ap on ap.adoption_post_id = ar.adoption_post_id
-                        WHERE ap.user_id = @p0
-                    ", Id)
+                var notifications = await _context.NotificationAdoptionRequests
+                    .Include(n => n.AdoptionRequest)
+                    .ThenInclude(ar => ar.AdoptionPost)
+                    .Where(n => n.AdoptionRequest.UserId == userId && (n.AdoptionRequest.Status == "accepted" || n.AdoptionRequest.Status == "declined"))
+                    .Select(n => new
+                    {
+                        n.NotiAdopReqId,
+                        n.RequestId,
+                        n.NotiDate,
+                        n.Description,
+                        n.IsRead,
+                        n.AdoptionRequest.Status,
+                        AdoptionPost = new
+                        {
+                            n.AdoptionRequest.AdoptionPostId,
+                            n.AdoptionRequest.AdoptionPost.name,
+                            n.AdoptionRequest.AdoptionPost.Image1,
+                        }
+                    })
+                    .OrderByDescending(n => n.NotiDate)
                     .ToListAsync();
 
-                // การจัดการกับค่า NULL สำหรับ is_read และ noti_date
-                var processedList = notificationAdoptionRequests.Select(n => new
-                {
-                    n.notiAdopReqId,
-                    n.requestId,
-                    n.userId,
-                    n.description,
-                    isRead = n.isRead.HasValue ? n.isRead.Value : (int?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า isRead เป็น null
-                    notiDate = n.notiDate.HasValue ? n.notiDate.Value : (DateTime?)null,  // ใช้ค่าเริ่มต้นเป็น null ถ้า notiDate เป็น null
-                }).ToList();
-
-                return Ok(processedList);
+                return Ok(notifications);
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = "An error occurred while retrieving the Notification Adoption Requests.", error = ex.Message });
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] NotificationAdoptionRequest newPost)
-        {
-            if (newPost == null)
-            {
-                return BadRequest(new { message = "Post data is invalid." });
-            }
 
+        //สามารถดูรายละเอียดของผู้ขอผ่าน GetRequestDetails
+        [HttpGet("request-details/{requestId}")]
+        public async Task<IActionResult> GetRequestDetails(int requestId)
+        {
             try
             {
-                var query = "INSERT INTO notification_adoption_request (request_id, user_id, description, is_read, noti_date) " +
-                            "VALUES (@p0, @p1, @p2, @p3, @p4)";
+                var requestDetails = await _context.AdoptionRequest
+                    .Include(ar => ar.User)
+                    .Where(ar => ar.RequestId == requestId)
+                    .Select(ar => new
+                    {
+                        ar.RequestId,
+                        ar.Status,
+                        ar.ReasonForAdoption,
+                        ar.DateAdded,
+                        User = new
+                        {
+                            ar.User.userId,
+                            ar.User.name,
+                            ar.User.email,
+                            ar.User.profilePic,
+                            ar.User.age,
+                            ar.User.tel,
+                            ar.User.career,
+                            ar.User.numOfFamMembers,
+                            ar.User.isHaveExperience,
+                            ar.User.sizeOfResidence,
+                            ar.User.typeOfResidence,
+                            ar.User.freeTimePerDay,
+                            ar.User.monthlyIncome
+                        }
+                    })
+                    .FirstOrDefaultAsync();
 
-                // การใช้ null coalescing เพื่อจัดการกับค่า null
-                var isReadValue = newPost.isRead.HasValue ? newPost.isRead.Value : (object)DBNull.Value;
-                var notiDateValue = newPost.notiDate.HasValue ? newPost.notiDate.Value : (object)DBNull.Value;
+                if (requestDetails == null)
+                {
+                    return NotFound("Request not found.");
+                }
 
-                await _context.Database.ExecuteSqlRawAsync(query,
-                    newPost.requestId,
-                    newPost.userId,
-                    newPost.description,
-                    isReadValue,
-                    notiDateValue
-                );
-
-                return Ok("Create Notification Adoption Request Success");
+                return Ok(requestDetails);
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = "An error occurred while creating the post.", error = ex.Message });
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
 
-        [HttpPatch("UpdateData")]
-        public async Task<IActionResult> UpdateData([FromBody] NotificationAdoptionRequest updatedNotifAdopReq)
-        {
-            if (updatedNotifAdopReq == null)
-            {
-                return BadRequest(new { message = "Invalid data." });
-            }
-
-            try
-            {
-                // ค้นหา NotificationAdoptionRequest ที่ต้องการอัปเดต
-                NotificationAdoptionRequest? existingNotifAdopReq = await _context.NotificationAdoptionRequests
-                    .FindAsync(updatedNotifAdopReq.notiAdopReqId);
-
-                if (existingNotifAdopReq == null)
-                {
-                    return NotFound(new { message = "Notification Adoption Request not found." });
-                }
-
-                // อัปเดตฟิลด์ที่ไม่เป็น nullable
-                existingNotifAdopReq.requestId = updatedNotifAdopReq.requestId;
-                existingNotifAdopReq.userId = updatedNotifAdopReq.userId;
-                existingNotifAdopReq.description = updatedNotifAdopReq.description;
-
-                // จัดการกับ nullable fields
-                if (updatedNotifAdopReq.isRead.HasValue)  // isRead เป็น nullable (int?)
-                {
-                    existingNotifAdopReq.isRead = updatedNotifAdopReq.isRead.Value;
-                }
-
-                if (updatedNotifAdopReq.notiDate.HasValue)  // notiDate เป็น nullable (DateTime?)
-                {
-                    existingNotifAdopReq.notiDate = updatedNotifAdopReq.notiDate.Value;
-                }
-
-                await _context.SaveChangesAsync();
-                return Ok(existingNotifAdopReq);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = "An error occurred while updating the Notification Adoption Request.", error = ex.Message });
-            }
-        }
-        [HttpDelete("DeleteData/{id}")]
-        public async Task<IActionResult> DeleteData(int id)
+        [HttpPatch("approve/{notiAdopReqId}")]
+        public async Task<IActionResult> ApproveAdoptionRequest(int notiAdopReqId)
         {
             try
             {
-                // ค้นหา NotificationAdoptionRequest ที่ต้องการลบ
-                var existingNotifAdopReq = await _context.NotificationAdoptionRequests
-                    .FindAsync(id);
+                var notification = await _context.NotificationAdoptionRequests
+                    .Include(n => n.AdoptionRequest)
+                    .FirstOrDefaultAsync(n => n.NotiAdopReqId == notiAdopReqId);
 
-                if (existingNotifAdopReq == null)
+                if (notification == null)
                 {
-                    return NotFound(new { message = "Notification Adoption Request not found." });
+                    return NotFound("Notification not found.");
                 }
 
-                // ลบ NotificationAdoptionRequest
-                _context.NotificationAdoptionRequests.Remove(existingNotifAdopReq);
+                notification.AdoptionRequest.Status = "accepted";
+                notification.IsRead = true;
+
+                var requesterNotification = new NotificationAdoptionRequest
+                {
+                    RequestId = notification.RequestId,
+                    UserId = notification.AdoptionRequest.UserId,
+                    Description = "Your adoption request has been approved!",
+                    IsRead = false,
+                    NotiDate = DateTime.Now
+                };
+
+                _context.NotificationAdoptionRequests.Add(requesterNotification);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Notification Adoption Request deleted successfully." });
+                return Ok(new { message = "Adoption request approved and notifications updated." });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = "An error occurred while deleting the Notification Adoption Request.", error = ex.Message });
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
 
+        [HttpPatch("deny/{notiAdopReqId}")]
+        public async Task<IActionResult> DenyAdoptionRequest(int notiAdopReqId)
+        {
+            try
+            {
+                var notification = await _context.NotificationAdoptionRequests
+                    .Include(n => n.AdoptionRequest)
+                    .FirstOrDefaultAsync(n => n.NotiAdopReqId == notiAdopReqId);
+
+                if (notification == null)
+                {
+                    return NotFound("Notification not found.");
+                }
+
+                notification.AdoptionRequest.Status = "declined";
+                notification.IsRead = true;
+
+                var requesterNotification = new NotificationAdoptionRequest
+                {
+                    RequestId = notification.RequestId,
+                    UserId = notification.AdoptionRequest.UserId,
+                    Description = "Your adoption request has been declined.",
+                    IsRead = false,
+                    NotiDate = DateTime.Now
+                };
+
+                _context.NotificationAdoptionRequests.Add(requesterNotification);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Adoption request denied and notifications updated." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        //ผู้ใช้สามารถทำเครื่องหมายว่าอ่านแล้วผ่าน MarkNotificationAsRead
+        [HttpPatch("mark-as-read/{notiAdopReqId}")]
+        public async Task<IActionResult> MarkNotificationAsRead(int notiAdopReqId)
+        {
+            try
+            {
+                var notification = await _context.NotificationAdoptionRequests
+                    .FindAsync(notiAdopReqId);
+
+                if (notification == null)
+                {
+                    return NotFound("Notification not found.");
+                }
+
+                notification.IsRead = true;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Notification marked as read." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        //[HttpGet("GetAllNotifications")]
+        //public async Task<IActionResult> GetAllNotifications()
+        //{
+        //    try
+        //    {
+        //        var notifications = await _context.NotificationAdoptionRequests
+        //            .Include(n => n.AdoptionRequest)
+        //            .ThenInclude(ar => ar.User)
+        //            .Select(n => new
+        //            {
+        //                n.notiAdopReqId,
+        //                n.requestId,
+        //                n.userId,
+        //                n.notiDate,
+        //                n.description,
+        //                n.AdoptionRequest.Status,
+
+        //                AdoptionPost = new
+        //                {
+        //                    n.AdoptionRequest.AdoptionPostId,
+        //                    n.AdoptionRequest.AdoptionPost.name,
+        //                    n.AdoptionRequest.AdoptionPost.Image1,
+        //                },
+
+        //                RequestingUser = new
+        //                {
+        //                    n.AdoptionRequest.AdoptionPost.userId,
+        //                    n.AdoptionRequest.User.name,
+        //                    n.AdoptionRequest.User.email,
+        //                    n.AdoptionRequest.User.age,
+        //                    n.AdoptionRequest.User.tel,
+        //                    n.AdoptionRequest.User.career,
+        //                    n.AdoptionRequest.User.numOfFamMembers,
+        //                    n.AdoptionRequest.User.isHaveExperience,
+        //                    n.AdoptionRequest.User.sizeOfResidence,
+        //                    n.AdoptionRequest.User.typeOfResidence,
+        //                    n.AdoptionRequest.User.freeTimePerDay,
+        //                    n.AdoptionRequest.User.monthlyIncome
+        //                }
+        //            })
+        //            .ToListAsync();
+
+        //        return Ok(notifications);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"An error occurred: {ex.Message}");
+        //    }
+        //}
+
+        //[HttpGet("GetNotification{id}")]
+        //public async Task<IActionResult> GetNotificationById(int id)
+        //{
+        //    try
+        //    {
+        //        var notification = await _context.NotificationAdoptionRequests
+        //            .Include(n => n.AdoptionRequest)
+        //            .ThenInclude(ar => ar.User)
+        //            .Where(n => n.notiAdopReqId == id)
+        //            .Select(n => new
+        //            {
+        //                n.notiAdopReqId,
+        //                n.requestId,
+        //                n.userId,
+        //                n.notiDate,
+        //                n.description,
+        //                n.AdoptionRequest.Status,
+
+        //                AdoptionPost = new
+        //                {
+        //                    n.AdoptionRequest.AdoptionPostId,
+        //                    n.AdoptionRequest.AdoptionPost.name,
+        //                    n.AdoptionRequest.AdoptionPost.Image1,
+        //                },
+
+        //                RequestingUser = new
+        //                {
+        //                    n.AdoptionRequest.AdoptionPost.userId,
+        //                    n.AdoptionRequest.User.name,
+        //                    n.AdoptionRequest.User.email,
+        //                    n.AdoptionRequest.User.age,
+        //                    n.AdoptionRequest.User.tel,
+        //                    n.AdoptionRequest.User.career,
+        //                    n.AdoptionRequest.User.numOfFamMembers,
+        //                    n.AdoptionRequest.User.isHaveExperience,
+        //                    n.AdoptionRequest.User.sizeOfResidence,
+        //                    n.AdoptionRequest.User.typeOfResidence,
+        //                    n.AdoptionRequest.User.freeTimePerDay,
+        //                    n.AdoptionRequest.User.monthlyIncome
+        //                }
+        //            })
+        //            .FirstOrDefaultAsync();
+
+        //        if (notification == null)
+        //        {
+        //            return NotFound($"Notification with ID {id} not found.");
+        //        }
+
+        //        return Ok(notification);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"An error occurred: {ex.Message}");
+        //    }
+        //}
+
+        //// Fetch notifications for user with waiting status
+        //[HttpGet("waiting")]
+        //public async Task<IActionResult> GetWaitingNotifications()
+        //{
+        //    try
+        //    {
+        //        var notifications = await _context.NotificationAdoptionRequests
+        //            .Include(n => n.AdoptionRequest)
+        //            .ThenInclude(ar => ar.User) // Include the user who made the request
+        //            .Where(n => n.AdoptionRequest.Status == "waiting")
+        //            .Select(n => new
+        //            {
+        //                n.notiAdopReqId,
+        //                n.description,
+        //                n.notiDate,
+        //                n.userId,
+        //                n.AdoptionRequest.Status,
+        //                AdoptionPost = new
+        //                {
+        //                    n.AdoptionRequest.AdoptionPostId,
+        //                    n.AdoptionRequest.AdoptionPost.name,
+        //                    n.AdoptionRequest.AdoptionPost.Image1
+        //                },
+        //                RequestingUser = new
+        //                {
+        //                    n.AdoptionRequest.AdoptionPost.userId,
+        //                    n.AdoptionRequest.User.name,
+        //                    n.AdoptionRequest.User.email,
+        //                    n.AdoptionRequest.User.profilePic,
+        //                    n.AdoptionRequest.User.age,
+        //                    n.AdoptionRequest.User.tel,
+        //                    n.AdoptionRequest.User.career,
+        //                    n.AdoptionRequest.User.numOfFamMembers,
+        //                    n.AdoptionRequest.User.isHaveExperience,
+        //                    n.AdoptionRequest.User.sizeOfResidence,
+        //                    n.AdoptionRequest.User.typeOfResidence,
+        //                    n.AdoptionRequest.User.freeTimePerDay,
+        //                    n.AdoptionRequest.User.monthlyIncome
+        //                }
+        //            })
+        //            .ToListAsync();
+
+        //        return Ok(notifications);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"An error occurred: {ex.Message}");
+        //    }
+        //}
 
 
+        //    [HttpPatch("approve/{notiAdopReqId}")]
+        //    public async Task<IActionResult> ApproveNotificationAdoptionRequest(int notiAdopReqId)
+        //    {
+        //        try
+        //        {
+        //            var notification = await _context.NotificationAdoptionRequests
+        //                .Include(n => n.AdoptionRequest)
+        //                .FirstOrDefaultAsync(n => n.notiAdopReqId == notiAdopReqId);
 
+        //            if (notification == null)
+        //            {
+        //                return NotFound("Notification not found.");
+        //            }
 
+        //            notification.AdoptionRequest.Status = "accepted";
+        //            notification.isRead = 1;
+        //            await _context.SaveChangesAsync();
 
+        //            return Ok(new { message = "Adoption request approved and notification marked as read." });
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            return StatusCode(500, $"An error occurred: {ex.Message}");
+        //        }
+        //    }
 
+        //    [HttpPatch("deny/{notiAdopReqId}")]
+        //    public async Task<IActionResult> DenyNotificationAdoptionRequest(int notiAdopReqId)
+        //    {
+        //        try
+        //        {
+        //            var notification = await _context.NotificationAdoptionRequests
+        //                .Include(n => n.AdoptionRequest)
+        //                .FirstOrDefaultAsync(n => n.notiAdopReqId == notiAdopReqId);
 
+        //            if (notification == null)
+        //            {
+        //                return NotFound("Notification not found.");
+        //            }
 
+        //            notification.AdoptionRequest.Status = "declined";
+        //            notification.isRead = 1;
+        //            await _context.SaveChangesAsync();
 
-
-
+        //            return Ok(new { message = "Adoption request denied and notification marked as read." });
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            return StatusCode(500, $"An error occurred: {ex.Message}");
+        //        }
+        //    }
     }
 }
