@@ -240,6 +240,7 @@ namespace NewLife_Web_api.Controllers
                         ar.RequestId,
                         ar.Status,
                         ar.DateAdded,
+                        ar.ReasonForAdoption,
                         AdoptionPost = new
                         {
                             ar.AdoptionPost.adoptionPostId,
