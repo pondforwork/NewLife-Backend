@@ -169,6 +169,9 @@ namespace NewLife_Web_api.Controllers
                 };
 
                 _context.NotificationAdoptionRequests.Add(requesterNotification);
+
+                Console.WriteLine($"Approving request with NotiAdopReqId: {notiAdopReqId}, UserId: {notification.AdoptionRequest.UserId}, Status: {notification.AdoptionRequest.Status}");
+
                 await _context.SaveChangesAsync();
 
                 return Ok(new { message = "Adoption request approved and notifications updated." });

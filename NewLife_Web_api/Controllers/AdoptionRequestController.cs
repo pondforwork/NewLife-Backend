@@ -111,7 +111,16 @@ namespace NewLife_Web_api.Controllers
                 return BadRequest(ModelState);
             }
             try
-            {
+        
+                var existingRequest = await _context.AdoptionRequest
+                    .Where(ar => ar.UserId == requestDto.UserId && ar.AdoptionPostId == requestDto.AdoptionPostId && (ar.Status == "waiting" || ar.Status == "accepted"))
+                    .FirstOrDefaultAsync();
+
+                if (existingRequest != null)
+                {
+                    return BadRequest("You have already requested adoption for this post.");
+                }
+
                 var newRequest = new AdoptionRequest
                 {
                     UserId = requestDto.UserId,
@@ -232,8 +241,10 @@ namespace NewLife_Web_api.Controllers
         {
             try
             {
+                string baseUrl = $"{Request.Scheme}://{Request.Host}/AdoptionPost/getImage";
                 var adoptionRequests = await _context.AdoptionRequest
                     .Include(ar => ar.AdoptionPost)
+                    .Include(ar => ar.Notifications)
                     .Where(ar => ar.UserId == userId)
                     .Select(ar => new
                     {
@@ -247,8 +258,19 @@ namespace NewLife_Web_api.Controllers
                             ar.AdoptionPost.name,
                             ar.AdoptionPost.age,
                             ar.AdoptionPost.breedId,
-                            ar.AdoptionPost.Image1
-                        }
+                            Image1 = string.IsNullOrEmpty(ar.AdoptionPost.Image1)
+                                ? null
+                                : $"{baseUrl}/{ar.AdoptionPost.Image1}"
+                        },
+                        Notifications = ar.Notifications
+                            .OrderByDescending(n => n.NotiDate)
+                            .Select(n => new
+                            {
+                                n.NotiAdopReqId,
+                                n.Description,
+                                n.IsRead,
+                                n.NotiDate
+                            }).ToList()
                     })
                     .ToListAsync();
 
@@ -260,45 +282,7 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-        //[HttpPatch("update-status/{requestId}")]
-        //public async Task<IActionResult> UpdateAdoptionRequestStatus(int requestId, [FromBody] StatusUpdateDto statusUpdate)
-        //{
-        //    try
-        //    {
-        //        var adoptionRequest = await _context.AdoptionRequest
-        //            .Include(ar => ar.AdoptionPost)
-        //            .FirstOrDefaultAsync(ar => ar.RequestId == requestId);
-
-        //        if (adoptionRequest == null)
-        //        {
-        //            return NotFound("Adoption Request not found.");
-        //        }
-
-        //        adoptionRequest.Status = statusUpdate.Status;
-        //        await _context.SaveChangesAsync();
-
-        //        // Create notification for the requester
-        //        var notification = new NotificationAdoptionRequest
-        //        {
-        //            requestId = requestId,
-        //            userId = adoptionRequest.UserId,
-        //            AdoptionPostId = adoptionRequest.AdoptionPostId,
-        //            description = $"Your adoption request for {adoptionRequest.AdoptionPost.name} has been {statusUpdate.Status}",
-        //            isRead = 0,
-        //            notiDate = DateTime.Now
-        //        };
-        //        _context.NotificationAdoptionRequests.Add(notification);
-        //        await _context.SaveChangesAsync();
-
-        //        return Ok(new { message = $"Adoption request status updated to {statusUpdate.Status}" });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, $"An error occurred: {ex.Message}");
-        //    }
-        //}
-
-        //ส่งข้อมูลผู้ใช้ที่
+        //ส่งข้อมูลผู้ใช้ขออุปการะ
         [HttpGet("request-details/{requestId}")]
         public async Task<IActionResult> GetAdoptionRequestDetails(int requestId)
         {
