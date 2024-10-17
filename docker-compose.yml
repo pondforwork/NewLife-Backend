@@ -1,0 +1,12 @@
+services:
+  web:
+    build:
+      context: . 
+      dockerfile: Dockerfile 
+    ports:
+      - "5296:8080"
+      - "443:443"
+    volumes:
+      - "./NewLife_Web_api:/app"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
