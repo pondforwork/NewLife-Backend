@@ -91,5 +91,8 @@ namespace NewLife_Web_api.Model
         [Column("delete_at")]
         public DateTime? deleteAt { get; set; }
 
+        [Column("tel")]
+        public string? tel { get; set; }
+
     }
 }

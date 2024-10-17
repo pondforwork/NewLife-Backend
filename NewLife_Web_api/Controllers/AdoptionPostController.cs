@@ -93,7 +93,7 @@ namespace NewLife_Web_api.Controllers
             IFNULL(image_10, '') AS image_10, 
             name, breed_id, age, sex, is_need_attention, description, 
             province_id, district_id, subdistrict_id, address_details, 
-            adoption_status, post_status, create_at, update_at, delete_at 
+            adoption_status, post_status, create_at, update_at, delete_at ,tel
             FROM adoption_post";
 
                 List<AdoptionPost> posts = await _context.AdoptionPosts.FromSqlRaw(query).ToListAsync();
@@ -138,7 +138,8 @@ namespace NewLife_Web_api.Controllers
                     adpt.post_status, 
                     adpt.create_at, 
                     adpt.update_at, 
-                    adpt.delete_at 
+                    adpt.delete_at ,
+                    ,tel
                 FROM 
                     adoption_post AS adpt
                 LEFT JOIN breed b on b.breed_id = adpt.breed_id 
@@ -186,7 +187,8 @@ namespace NewLife_Web_api.Controllers
                     adpt.post_status, 
                     adpt.create_at, 
                     adpt.update_at, 
-                    adpt.delete_at 
+                    adpt.delete_at,
+                    ,tel
                 FROM 
                     adoption_post AS adpt
                 LEFT JOIN breed b on b.breed_id = adpt.breed_id 
@@ -232,7 +234,8 @@ namespace NewLife_Web_api.Controllers
             adpt.post_status, 
             adpt.create_at, 
             adpt.update_at, 
-            adpt.delete_at 
+            adpt.delete_at ,
+            ,tel
         FROM 
             adoption_post AS adpt
         WHERE adpt.is_need_attention = true";
@@ -254,7 +257,7 @@ namespace NewLife_Web_api.Controllers
             {
                 var query = "SELECT adoption_post_id, user_id, image_1, image_2, image_3, image_4, image_5, image_6, image_7, image_8, image_9, " +
                     "image_10, name, breed_id, age, sex, is_need_attention, description, province_id, district_id, " +
-                    "subdistrict_id, address_details, adoption_status, post_status, create_at, update_at, delete_at " +
+                    "subdistrict_id, address_details, adoption_status, post_status, create_at, update_at, delete_at ,tel" +
                     "FROM adoption_post " +
                     "ORDER BY create_at DESC";
                 List<AdoptionPost> posts = await _context.AdoptionPosts.FromSqlRaw(query).ToListAsync();
@@ -345,7 +348,7 @@ namespace NewLife_Web_api.Controllers
                     .FromSqlRaw("SELECT adoption_post_id, user_id, image_1, image_2, image_3, image_4, image_5, " +
                     "image_6, image_7, image_8, image_9,image_10, name, breed_id, age, sex, is_need_attention, " +
                     "description, province_id, district_id,subdistrict_id, address_details, adoption_status, " +
-                    "post_status, create_at, update_at, delete_at FROM adoption_post WHERE adoption_post_id = {0}", id)
+                    "post_status, create_at, update_at, delete_at ,tel FROM adoption_post WHERE adoption_post_id = {0}", id)
                     .FirstOrDefaultAsync();
 
                 if (adoptionPost == null)
@@ -369,11 +372,11 @@ namespace NewLife_Web_api.Controllers
             var query = "INSERT INTO adoption_post (" +
              "user_id, image_1, image_2, image_3, image_4, image_5, image_6, image_7, image_8, image_9, " +
              "image_10, name, breed_id, age, sex, is_need_attention, description, province_id, district_id, " +
-             "subdistrict_id, address_details, adoption_status, post_status, create_at) " +
+             "subdistrict_id, address_details, adoption_status, post_status, create_at , tel) " +
              "VALUES (" +
              "@userId, @image1, @image2, @image3, @image4, @image5, @image6, @image7, @image8, @image9, " +
              "@image10, @name, @breedId, @age, @sex, @isNeedAttention, @description, @provinceId, @districtId, " +
-             "@subdistrictId, @addressDetails, @adoptionStatus, @postStatus, @createAt)";
+             "@subdistrictId, @addressDetails, @adoptionStatus, @postStatus, @createAt , @tel)";
 
             var parameters = new[]
             {
@@ -401,6 +404,7 @@ namespace NewLife_Web_api.Controllers
                 new MySqlParameter("@adoptionStatus", newPost.adoptionStatus ?? (object)DBNull.Value),
                 new MySqlParameter("@postStatus", newPost.postStatus ?? (object)DBNull.Value),
                 new MySqlParameter("@createAt", DateTime.Now),
+                new MySqlParameter("@tel", newPost.tel),
             };
 
             try
@@ -422,7 +426,7 @@ namespace NewLife_Web_api.Controllers
                  .FromSqlRaw("SELECT adoption_post_id, user_id, image_1, image_2, image_3, image_4, image_5, " +
                     "image_6, image_7, image_8, image_9,image_10, name, breed_id, age, sex, is_need_attention, " +
                     "description, province_id, district_id,subdistrict_id, address_details, adoption_status, " +
-                    "post_status, create_at, update_at, delete_at FROM adoption_post WHERE adoption_post_id = {0}", updatedPost.adoptionPostId)
+                    "post_status, create_at, update_at, delete_at,tel FROM adoption_post WHERE adoption_post_id = {0}", updatedPost.adoptionPostId)
                  .FirstOrDefaultAsync();
 
             if (existingPost == null)
@@ -456,6 +460,7 @@ namespace NewLife_Web_api.Controllers
                       "post_status = @postStatus, " +
                       "create_at = @createAt, " +
                       "update_at = @updateAt " +
+                      "tel = @tel " +
                       "WHERE adoption_post_id = @adoptionPostId";
 
 
@@ -487,6 +492,7 @@ namespace NewLife_Web_api.Controllers
                 new MySqlParameter("@postStatus", updatedPost.postStatus ?? (object)DBNull.Value),
                 new MySqlParameter("@createAt", existingPost.creatAt),
                 new MySqlParameter("@updateAt", DateTime.Now),
+                new MySqlParameter("@tel", updatedPost.tel),
             };
 
             try
@@ -634,8 +640,9 @@ namespace NewLife_Web_api.Controllers
 
                         string description = "Sample description of the image";
                         form.Add(new StringContent(description), "description");
+                        form.Add(new StringContent(adoptionImage.adoptionImageId.ToString()), "adoptionImageId");
 
-                        var response = await httpClient.PostAsync("http://localhost:3000/posts", form);
+                        var response = await httpClient.PostAsync("http://74.48.71.139:3000/posts", form);
 
                         if (response.IsSuccessStatusCode)
                         {
