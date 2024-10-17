@@ -110,7 +110,7 @@ namespace NewLife_Web_api.Controllers
             {
                 return BadRequest(ModelState);
             }
-            try
+            try { 
         
                 var existingRequest = await _context.AdoptionRequest
                     .Where(ar => ar.UserId == requestDto.UserId && ar.AdoptionPostId == requestDto.AdoptionPostId && (ar.Status == "waiting" || ar.Status == "accepted"))
