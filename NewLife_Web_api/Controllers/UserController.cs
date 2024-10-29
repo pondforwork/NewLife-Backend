@@ -353,46 +353,6 @@ namespace NewLife_Web_api.Controllers
             return Ok(new { message = "User created successfully." });
         }
 
-        [HttpGet("getUserDetailsForAdoption/{userId}")]
-        public async Task<IActionResult> GetUserDetailsForAdoption(int userId)
-        {
-            try
-            {
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
-                {
-                    return NotFound(new { message = "User not found." });
-                }
-
-                // แปลงข้อมูลให้ตรงกับ snake_case ของ Frontend
-                var userDetails = new
-                {
-                    userId = user.userId,
-                    name = user.name ?? "",
-                    lastName = user.lastName ?? "",
-                    email = user.email ?? "",
-                    tel = user.tel ?? "",
-                    gender = user.gender ?? "",
-                    age = user.age ?? 0,
-                    address = user.address ?? "",
-                    career = user.career ?? "",
-                    numOfFamMembers = user.numOfFamMembers ?? 0,
-                    isHaveExperience = user.isHaveExperience ?? false,
-                    sizeOfResidence = user.sizeOfResidence ?? "",
-                    typeOfResidence = user.typeOfResidence ?? "",
-                    freeTimePerDay = user.freeTimePerDay ?? 0,
-                    monthlyIncome = user.monthlyIncome ?? 0,
-                    profilePic = user.profilePic
-                };
-
-                return Ok(userDetails);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error fetching user details.", error = ex.Message });
-            }
-        }
-
         [HttpPatch("UpdateUser/{userId}")]
         public async Task<IActionResult> UpdateUser(int userId, [FromForm] UserUpdateDto userUpdate)
         {

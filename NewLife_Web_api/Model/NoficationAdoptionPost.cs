@@ -10,6 +10,7 @@ namespace NewLife_Web_api.Model
         [Column("notification_id")]
         public int notificationId { get; set; }
 
+        [Column("post_adoption_id")]
         public int postAdoptionId { get; set; }
 
         [Column("user_id")]

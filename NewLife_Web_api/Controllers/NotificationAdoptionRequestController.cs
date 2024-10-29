@@ -157,6 +157,7 @@ namespace NewLife_Web_api.Controllers
             {
                 var notification = await _context.NotificationAdoptionRequests
                     .Include(n => n.AdoptionRequest)
+                    .ThenInclude(ar => ar.AdoptionPost)
                     .FirstOrDefaultAsync(n => n.NotiAdopReqId == notiAdopReqId);
 
                 if (notification == null)
@@ -167,6 +168,12 @@ namespace NewLife_Web_api.Controllers
                 // อัปเดตสถานะคำขอเป็น 'accepted'
                 notification.AdoptionRequest.Status = "accepted";
                 notification.IsRead = true;
+
+                // อัปเดต postStatus ใน AdoptionPost เป็น "complete"
+                if (notification.AdoptionRequest.AdoptionPost != null)
+                {
+                    notification.AdoptionRequest.AdoptionPost.adoptionStatus = "complete";
+                }
 
                 // ส่งการแจ้งเตือนไปยังผู้ขอว่าคำขอได้รับการอนุมัติ
                 var requesterNotification = new NotificationAdoptionRequest
@@ -181,14 +188,13 @@ namespace NewLife_Web_api.Controllers
                 _context.NotificationAdoptionRequests.Add(requesterNotification);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Adoption request approved" });
+                return Ok(new { message = "Adoption request approved and post status updated to complete." });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-
 
         [HttpPatch("deny/{notiAdopReqId}")]
         public async Task<IActionResult> DenyAdoptionRequest(int notiAdopReqId)
@@ -197,6 +203,7 @@ namespace NewLife_Web_api.Controllers
             {
                 var notification = await _context.NotificationAdoptionRequests
                     .Include(n => n.AdoptionRequest)
+                    .ThenInclude(ar => ar.AdoptionPost) // รวมข้อมูล AdoptionPost
                     .FirstOrDefaultAsync(n => n.NotiAdopReqId == notiAdopReqId);
 
                 if (notification == null)
@@ -207,6 +214,12 @@ namespace NewLife_Web_api.Controllers
                 // อัปเดตสถานะคำขอเป็น 'declined'
                 notification.AdoptionRequest.Status = "declined";
                 notification.IsRead = true;
+
+                // อัปเดต postStatus ใน AdoptionPost เป็น "complete"
+                if (notification.AdoptionRequest.AdoptionPost != null)
+                {
+                    notification.AdoptionRequest.AdoptionPost.adoptionStatus = "complete";
+                }
 
                 // ส่งการแจ้งเตือนไปยังผู้ขอว่าคำขอถูกปฏิเสธ
                 var requesterNotification = new NotificationAdoptionRequest
@@ -221,7 +234,7 @@ namespace NewLife_Web_api.Controllers
                 _context.NotificationAdoptionRequests.Add(requesterNotification);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Adoption request denied and notifications updated." });
+                return Ok(new { message = "Adoption request denied, notifications updated, and post status set to complete." });
             }
             catch (Exception ex)
             {
@@ -254,5 +267,7 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
+
     }
+
 }
