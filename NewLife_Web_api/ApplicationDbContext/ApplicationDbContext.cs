@@ -90,31 +90,72 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<MissingPost>()
     .ToTable("missing_post");
 
-        modelBuilder.Entity<User>()
-    .ToTable("user");
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("user");
+            entity.HasKey(e => e.userId);
+
+            // กำหนดให้ลบข้อมูลที่เกี่ยวข้องใน AdoptionRequest เมื่อลบ User
+            entity.HasMany(u => u.AdoptionRequests)
+                  .WithOne(ar => ar.User)
+                  .HasForeignKey(ar => ar.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        //modelBuilder.Entity<AdoptionPost>(entity =>
+        //{
+        //    entity.ToTable("adoption_post");  // กำหนดชื่อตารางให้ตรงกับในฐานข้อมูล
+        //    entity.HasKey(e => e.adoptionPostId);  // กำหนดคีย์หลักของตาราง
+        //});
+
+        //modelBuilder.Entity<AdoptionRequest>(entity =>
+        //{
+        //    entity.ToTable("adoption_request");
+        //    entity.HasKey(e => e.RequestId);
+        //    entity.HasOne(e => e.User)
+        //        .WithMany(u => u.AdoptionRequests)
+        //        .HasForeignKey(e => e.UserId);
+        //    entity.HasOne(e => e.AdoptionPost)
+        //        .WithMany()
+        //        .HasForeignKey(e => e.AdoptionPostId);
+        //});
 
         modelBuilder.Entity<AdoptionPost>(entity =>
         {
-            entity.ToTable("adoption_post");  // กำหนดชื่อตารางให้ตรงกับในฐานข้อมูล
-            entity.HasKey(e => e.adoptionPostId);  // กำหนดคีย์หลักของตาราง
+            entity.ToTable("adoption_post");
+            entity.HasKey(e => e.adoptionPostId);
+
+            // เพิ่ม relationship กับ User
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(ap => ap.userId)
+                  .OnDelete(DeleteBehavior.Cascade); // ให้ลบ adoption posts เมื่อลบ user
         });
 
         modelBuilder.Entity<AdoptionRequest>(entity =>
         {
             entity.ToTable("adoption_request");
             entity.HasKey(e => e.RequestId);
+
+            // กำหนดความสัมพันธ์กับ User
             entity.HasOne(e => e.User)
                 .WithMany(u => u.AdoptionRequests)
-                .HasForeignKey(e => e.UserId);
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // กำหนดความสัมพันธ์กับ AdoptionPost
             entity.HasOne(e => e.AdoptionPost)
                 .WithMany()
-                .HasForeignKey(e => e.AdoptionPostId);
+                .HasForeignKey(e => e.AdoptionPostId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<NotificationAdoptionRequest>(entity =>
         {
             entity.ToTable("notification_adoption_request");
             entity.HasKey(e => e.NotiAdopReqId);
+
+            // กำหนดให้ลบการแจ้งเตือนเมื่อลบ AdoptionRequest
             entity.HasOne(n => n.AdoptionRequest)
                 .WithMany(ar => ar.Notifications)
                 .HasForeignKey(n => n.RequestId)

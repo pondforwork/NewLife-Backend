@@ -43,7 +43,6 @@ namespace NewLife_Web_api.Controllers
                         adoptionRequest.User.userId,
                         adoptionRequest.User.name,
                         adoptionRequest.User.email
-                        // เพิ่มข้อมูล User อื่นๆ ตามต้องการ
                     },
                     AdoptionPost = new
                     {
@@ -52,7 +51,6 @@ namespace NewLife_Web_api.Controllers
                         adoptionRequest.AdoptionPost.age,
                         adoptionRequest.AdoptionPost.breedId,
                         adoptionRequest.AdoptionPost.Image1
-                        // เพิ่มข้อมูล AdoptionPost อื่นๆ ตามต้องการ
                     }
                 });
             }
@@ -81,7 +79,7 @@ namespace NewLife_Web_api.Controllers
                             ar.User.userId,
                             ar.User.name,
                             ar.User.email
-                            // เพิ่มข้อมูล User อื่นๆ ตามต้องการ
+                  
                         },
                         AdoptionPost = new
                         {
@@ -90,7 +88,7 @@ namespace NewLife_Web_api.Controllers
                             ar.AdoptionPost.age,
                             ar.AdoptionPost.breedId,
                             ar.AdoptionPost.Image1
-                            // เพิ่มข้อมูล AdoptionPost อื่นๆ ตามต้องการ
+                           
                         }
                     })
                     .ToListAsync();
@@ -102,7 +100,6 @@ namespace NewLife_Web_api.Controllers
             }
         }
 
-
         [HttpPost]
         public async Task<IActionResult> CreateAdoptionRequest([FromBody] AdoptionRequestDto requestDto)
         {
@@ -110,15 +107,20 @@ namespace NewLife_Web_api.Controllers
             {
                 return BadRequest(ModelState);
             }
-            try { 
-        
-                var existingRequest = await _context.AdoptionRequest
-                    .Where(ar => ar.UserId == requestDto.UserId && ar.AdoptionPostId == requestDto.AdoptionPostId && (ar.Status == "waiting" || ar.Status == "accepted"))
-                    .FirstOrDefaultAsync();
 
-                if (existingRequest != null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var user = await _context.Users.FindAsync(requestDto.UserId);
+                if (user == null)
                 {
-                    return BadRequest("You have already requested adoption for this post.");
+                    return NotFound("User not found.");
+                }
+
+                if (requestDto.UpdateUserInfo && requestDto.UserUpdate != null)
+                {
+                    UpdateUserFromDto(user, requestDto.UserUpdate);
                 }
 
                 var newRequest = new AdoptionRequest
@@ -129,31 +131,56 @@ namespace NewLife_Web_api.Controllers
                     Status = "waiting",
                     DateAdded = DateTime.Now
                 };
+
                 _context.AdoptionRequest.Add(newRequest);
                 await _context.SaveChangesAsync();
 
-                var adoptionPost = await _context.AdoptionPosts.FindAsync(newRequest.AdoptionPostId);
+                var adoptionPost = await _context.AdoptionPosts.FindAsync(requestDto.AdoptionPostId);
+
                 if (adoptionPost != null)
                 {
-                    var requester = await _context.Users.FindAsync(requestDto.UserId);
                     var notification = new NotificationAdoptionRequest
                     {
                         RequestId = newRequest.RequestId,
                         UserId = adoptionPost.userId,
-                        Description = $"New adoption request from {requester.name} {requester.lastName}",
+                        Description = $"You have new adoption request",
                         IsRead = false,
                         NotiDate = DateTime.Now
                     };
                     _context.NotificationAdoptionRequests.Add(notification);
-                    await _context.SaveChangesAsync();
                 }
 
-                return Ok(new { message = "Adoption request created and notification sent.", requestId = newRequest.RequestId });
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Adoption request created successfully.", requestId = newRequest.RequestId });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                await transaction.RollbackAsync();
+                Console.WriteLine($"Exception: {ex.Message} | {ex.StackTrace}");
+                return StatusCode(500, $"An error occurred: {ex.Message} | {ex.StackTrace}");
             }
+        }
+
+
+
+        private void UpdateUserFromDto(User user, UserUpdateDto updateDto)
+        {
+            if (!string.IsNullOrWhiteSpace(updateDto.Name)) user.name = updateDto.Name;
+            if (!string.IsNullOrWhiteSpace(updateDto.LastName)) user.lastName = updateDto.LastName;
+            if (!string.IsNullOrWhiteSpace(updateDto.Tel)) user.tel = updateDto.Tel;
+            if (!string.IsNullOrWhiteSpace(updateDto.Gender)) user.gender = updateDto.Gender;
+            if (updateDto.Age.HasValue) user.age = updateDto.Age.Value;
+            if (!string.IsNullOrWhiteSpace(updateDto.Address)) user.address = updateDto.Address;
+            if (!string.IsNullOrWhiteSpace(updateDto.Career)) user.career = updateDto.Career;
+            if (updateDto.NumOfFamMembers.HasValue) user.numOfFamMembers = updateDto.NumOfFamMembers.Value;
+            if (updateDto.IsHaveExperience.HasValue) user.isHaveExperience = updateDto.IsHaveExperience.Value;
+            if (!string.IsNullOrWhiteSpace(updateDto.SizeOfResidence)) user.sizeOfResidence = updateDto.SizeOfResidence;
+            if (!string.IsNullOrWhiteSpace(updateDto.TypeOfResidence)) user.typeOfResidence = updateDto.TypeOfResidence;
+            if (updateDto.FreeTimePerDay.HasValue) user.freeTimePerDay = updateDto.FreeTimePerDay.Value;
+            if (updateDto.MonthlyIncome.HasValue) user.monthlyIncome = updateDto.MonthlyIncome.Value;
+
         }
 
         [HttpDelete("cancel/{requestId}")]

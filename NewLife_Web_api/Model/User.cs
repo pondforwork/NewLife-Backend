@@ -7,59 +7,56 @@ namespace NewLife_Web_api.Model
     public class User
     {
         [Key]
-        [Column("user_id")] 
+        [Column("user_id")]
         public int userId { get; set; }
 
         [Column("profile_pic")]
         public string? profilePic { get; set; }
 
         [Column("name")]
-        public string name { get; set; }
+        public string? name { get; set; }
 
         [Column("lastname")]
-        public string lastName { get; set; }
+        public string? lastName { get; set; }
 
         [Column("email")]
-        public string email { get; set; }
+        public string? email { get; set; }
 
         [Column("password")]
-        public string password { get; set; }
+        public string? password { get; set; }
 
         [Column("role")]
-        public string role { get; set; }
+        public string? role { get; set; }
 
         [Column("address")]
-        public string address { get; set; }
+        public string? address { get; set; }
 
         [Column("tel")]
-        public string tel { get; set; }
+        public string? tel { get; set; }
 
         [Column("gender")]
-        public string gender { get; set; }
+        public string? gender { get; set; }
 
         [Column("age")]
-        public int age{ get; set; }
+        public int? age { get; set; }
 
         [Column("career")]
-        public string career{ get; set; }
+        public string? career { get; set; }
 
         [Column("num_of_fam_members")]
-        public int numOfFamMembers { get; set; }
+        public int? numOfFamMembers { get; set; }
 
         [Column("is_have_experience")]
         public bool? isHaveExperience { get; set; }
 
         [Column("size_of_residence")]
-        public string sizeOfResidence { get; set; }
+        public string? sizeOfResidence { get; set; }
 
         [Column("type_of_residence")]
-        public string typeOfResidence { get; set; }
+        public string? typeOfResidence { get; set; }
 
         [Column("free_time_per_day")]
-        public int freeTimePerDay { get; set; }
-
-        [Column("reason_for_adoption")]
-        public string reasonForAdoption { get; set; }
+        public int? freeTimePerDay { get; set; }
 
         [Column("monthly_income")]
         public int? monthlyIncome { get; set; }
@@ -80,8 +77,7 @@ namespace NewLife_Web_api.Model
         public int? interestId5 { get; set; }
 
         [JsonIgnore]
-        public ICollection<AdoptionRequest> AdoptionRequests { get; set; }
-
+        public virtual ICollection<AdoptionRequest>? AdoptionRequests { get; set; } = new List<AdoptionRequest>();
     }
 
 }

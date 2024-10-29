@@ -36,60 +36,57 @@ namespace NewLife_Web_api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] RegisterDto registerDto)
         {
-            if (await _context.Users.AnyAsync(u => u.email == registerDto.Email))
+            try
             {
-                return BadRequest("Email already exists.");
-            }
-
-            var newUser = new User
-            {
-                email = registerDto.Email,
-                password = ComputeSha256Hash(registerDto.Password), // Hash the password
-                name = registerDto.Name,
-                lastName = registerDto.LastName,
-                tel = registerDto.Tel,
-                gender = registerDto.Gender,
-                age = registerDto.Age,
-                address = registerDto.Address,
-                career = registerDto.Career,
-                numOfFamMembers = registerDto.NumOfFamMembers ?? 0,
-                isHaveExperience = registerDto.IsHaveExperience,
-                sizeOfResidence = registerDto.SizeOfResidence,
-                typeOfResidence = registerDto.TypeOfResidence,
-                freeTimePerDay = registerDto.FreeTimePerDay ?? 0,
-                reasonForAdoption = registerDto.ReasonForAdoption,
-                monthlyIncome = registerDto.MonthlyIncome ?? 0,
-                role = "user",
-                interestId1 = registerDto.InterestedBreedIds.Count > 0 ? registerDto.InterestedBreedIds[0] : null,
-                interestId2 = registerDto.InterestedBreedIds.Count > 1 ? registerDto.InterestedBreedIds[1] : null,
-                interestId3 = registerDto.InterestedBreedIds.Count > 2 ? registerDto.InterestedBreedIds[2] : null,
-                interestId4 = registerDto.InterestedBreedIds.Count > 3 ? registerDto.InterestedBreedIds[3] : null,
-                interestId5 = registerDto.InterestedBreedIds.Count > 4 ? registerDto.InterestedBreedIds[4] : null
-            };
-
-            if (registerDto.ProfilePic != null)
-            {
-                var imageResult = await SaveImage(registerDto.ProfilePic);
-                if (imageResult is OkObjectResult okResult)
+                if (await _context.Users.AnyAsync(u => u.email == registerDto.Email))
                 {
-                    newUser.profilePic = (string)((dynamic)okResult.Value).FileName;
+                    return BadRequest(new { message = "Email already exists." });
                 }
+
+                var newUser = new User
+                {
+                    email = registerDto.Email,
+                    password = ComputeSha256Hash(registerDto.Password ?? ""),
+                    name = registerDto.Name,
+                    lastName = registerDto.LastName,
+                    tel = registerDto.Tel,
+                    gender = registerDto.Gender,
+                    age = registerDto.Age ?? 0,
+                    address = registerDto.Address,
+                    career = registerDto.Career,
+                    numOfFamMembers = registerDto.NumOfFamMembers ?? 0,
+                    isHaveExperience = registerDto.IsHaveExperience ?? false,
+                    sizeOfResidence = registerDto.SizeOfResidence,
+                    typeOfResidence = registerDto.TypeOfResidence,
+                    freeTimePerDay = registerDto.FreeTimePerDay ?? 0,
+                    monthlyIncome = registerDto.MonthlyIncome ?? 0,
+                    role = "user",
+                    interestId1 = registerDto.InterestedBreedIds?.Count > 0 ? registerDto.InterestedBreedIds[0] : null,
+                    interestId2 = registerDto.InterestedBreedIds?.Count > 1 ? registerDto.InterestedBreedIds[1] : null,
+                    interestId3 = registerDto.InterestedBreedIds?.Count > 2 ? registerDto.InterestedBreedIds[2] : null,
+                    interestId4 = registerDto.InterestedBreedIds?.Count > 3 ? registerDto.InterestedBreedIds[3] : null,
+                    interestId5 = registerDto.InterestedBreedIds?.Count > 4 ? registerDto.InterestedBreedIds[4] : null
+                };
+
+                if (registerDto.ProfilePic != null)
+                {
+                    var imageResult = await SaveImage(registerDto.ProfilePic);
+                    if (imageResult is OkObjectResult okResult)
+                    {
+                        newUser.profilePic = (string)((dynamic)okResult.Value).FileName;
+                    }
+                }
+
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { userId = newUser.userId, message = "Registration successful." });
             }
-
-            //if (registerDto.InterestedBreedIds != null && registerDto.InterestedBreedIds.Count > 0)
-            //{
-            //    newUser.breedInterest1 = registerDto.InterestedBreedIds.Count > 0 ? registerDto.InterestedBreedIds[0] : null;
-            //    newUser.breedInterest2 = registerDto.InterestedBreedIds.Count > 1 ? registerDto.InterestedBreedIds[1] : null;
-            //    newUser.breedInterest3 = registerDto.InterestedBreedIds.Count > 2 ? registerDto.InterestedBreedIds[2] : null;
-            //    newUser.breedInterest4 = registerDto.InterestedBreedIds.Count > 3 ? registerDto.InterestedBreedIds[3] : null;
-            //    newUser.breedInterest5 = registerDto.InterestedBreedIds.Count > 4 ? registerDto.InterestedBreedIds[4] : null;
-            //}
-            _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { userId = newUser.userId, message = "Registration successful." });
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Registration failed.", error = ex.Message });
+            }
         }
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
@@ -227,7 +224,7 @@ namespace NewLife_Web_api.Controllers
 
             if (!System.IO.File.Exists(filePath))
             {
-                return NotFound();
+                return NotFound(new { message = "Image not found." });
             }
 
             var contentType = "image/jpeg"; 
@@ -242,7 +239,7 @@ namespace NewLife_Web_api.Controllers
                 var users = await _context.Users.FromSqlRaw(@"
             SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, 
             age, career, num_of_fam_members, is_have_experience, size_of_residence, 
-            type_of_residence, free_time_per_day, reason_for_adoption, monthly_income, 
+            type_of_residence, free_time_per_day, monthly_income, 
             interest_id_1, interest_id_2, interest_id_3, interest_id_4, interest_id_5  
             FROM user;").ToListAsync();
 
@@ -261,14 +258,16 @@ namespace NewLife_Web_api.Controllers
             try
             {
                 var user = await _context.Users
-                    .FromSqlRaw(@"
-                SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, 
-                num_of_fam_members, is_have_experience, size_of_residence, type_of_residence, 
-                free_time_per_day, reason_for_adoption, interest_id_1, interest_id_2, interest_id_3, 
-                interest_id_4, interest_id_5, monthly_income 
-                FROM user 
-                WHERE user_id = {0}", Id)
-                    .FirstOrDefaultAsync();
+            .FromSqlRaw(@"
+            SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career,
+            num_of_fam_members, is_have_experience, size_of_residence, type_of_residence,
+            free_time_per_day, interest_id_1, interest_id_2, interest_id_3,
+            interest_id_4, interest_id_5, monthly_income
+            FROM user
+            WHERE user_id = {0}
+            ORDER BY user_id", Id)
+            .FirstOrDefaultAsync();
+
 
                 if (user == null)
                 {
@@ -334,7 +333,6 @@ namespace NewLife_Web_api.Controllers
                 new MySqlParameter("@size_of_residence", user.sizeOfResidence ?? (object)DBNull.Value),
                 new MySqlParameter("@type_of_residence", user.typeOfResidence ?? (object)DBNull.Value),
                 new MySqlParameter("@free_time_per_day", user.freeTimePerDay),
-                new MySqlParameter("@reason_for_adoption", user.reasonForAdoption ?? (object)DBNull.Value),
                 new MySqlParameter("@interest_id_1", user.interestId1.HasValue ? (object)user.interestId1.Value : DBNull.Value),
                 new MySqlParameter("@interest_id_2", user.interestId2.HasValue ? (object)user.interestId2.Value : DBNull.Value),
                 new MySqlParameter("@interest_id_3", user.interestId3.HasValue ? (object)user.interestId3.Value : DBNull.Value),
@@ -354,131 +352,131 @@ namespace NewLife_Web_api.Controllers
 
             return Ok(new { message = "User created successfully." });
         }
-        [HttpPatch("UpdateUser")]
-        public async Task<IActionResult> UpdateUser([FromForm] User user, IFormFile? image)
-        {
-            string imageFileName = "";
 
-            // Upload new image if provided
-            if (image != null)
+        [HttpGet("getUserDetailsForAdoption/{userId}")]
+        public async Task<IActionResult> GetUserDetailsForAdoption(int userId)
+        {
+            try
             {
-                try
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
                 {
-                    var result = await SaveImage(image);
-                    if (result is OkObjectResult okResult)
-                    {
-                        imageFileName = (string)((dynamic)okResult.Value).FileName;
-                    }
-                    else
-                    {
-                        return BadRequest(new { message = "Image upload failed." });
-                    }
+                    return NotFound(new { message = "User not found." });
                 }
-                catch (Exception ex)
+
+                // แปลงข้อมูลให้ตรงกับ snake_case ของ Frontend
+                var userDetails = new
                 {
-                    return BadRequest(new { message = "Image upload failed.", error = ex.Message });
-                }
+                    userId = user.userId,
+                    name = user.name ?? "",
+                    lastName = user.lastName ?? "",
+                    email = user.email ?? "",
+                    tel = user.tel ?? "",
+                    gender = user.gender ?? "",
+                    age = user.age ?? 0,
+                    address = user.address ?? "",
+                    career = user.career ?? "",
+                    numOfFamMembers = user.numOfFamMembers ?? 0,
+                    isHaveExperience = user.isHaveExperience ?? false,
+                    sizeOfResidence = user.sizeOfResidence ?? "",
+                    typeOfResidence = user.typeOfResidence ?? "",
+                    freeTimePerDay = user.freeTimePerDay ?? 0,
+                    monthlyIncome = user.monthlyIncome ?? 0,
+                    profilePic = user.profilePic
+                };
+
+                return Ok(userDetails);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error fetching user details.", error = ex.Message });
+            }
+        }
+
+        [HttpPatch("UpdateUser/{userId}")]
+        public async Task<IActionResult> UpdateUser(int userId, [FromForm] UserUpdateDto userUpdate)
+        {
+            var existingUser = await _context.Users.FindAsync(userId);
+            if (existingUser == null)
+            {
+                return NotFound("User not found.");
             }
 
-            var sqlQuery = @"
-        UPDATE user SET
-            profile_pic = @profile_pic, 
-            `name` = @name, 
-            lastname = @lastname, 
-            email = @email, 
-            `password` = @password, 
-            `role` = @role, 
-            tel = @tel, 
-            gender = @gender, 
-            age = @age, 
-            career = @career, 
-            num_of_fam_members = @num_of_fam_members, 
-            is_have_experience = @is_have_experience, 
-            experience = @experience, 
-            size_of_residence = @size_of_residence, 
-            type_of_residence = @type_of_residence, 
-            free_time_per_day = @free_time_per_day, 
-            reason_for_adoption = @reason_for_adoption, 
-            interest_id_1 = @interest_id_1, 
-            interest_id_2 = @interest_id_2, 
-            interest_id_3 = @interest_id_3, 
-            interest_id_4 = @interest_id_4, 
-            interest_id_5 = @interest_id_5, 
-            monthly_income = @monthly_income,
-            address = @address
-        WHERE user_id = @user_id";
-
-            var parameters = new[]
-            {
-        new MySqlParameter("@profile_pic", !string.IsNullOrEmpty(imageFileName) ? (object)imageFileName : DBNull.Value),
-        new MySqlParameter("@name", user.name ?? (object)DBNull.Value),
-        new MySqlParameter("@lastname", user.lastName ?? (object)DBNull.Value),
-        new MySqlParameter("@email", user.email ?? (object)DBNull.Value),
-        new MySqlParameter("@password", user.password ?? (object)DBNull.Value),
-        new MySqlParameter("@role", user.role ?? (object)DBNull.Value),
-        new MySqlParameter("@tel", user.tel ?? (object)DBNull.Value),
-        new MySqlParameter("@gender", user.gender ?? (object)DBNull.Value),
-        new MySqlParameter("@age", user.age),
-        new MySqlParameter("@career", user.career ?? (object)DBNull.Value),
-        new MySqlParameter("@num_of_fam_members", user.numOfFamMembers),
-        new MySqlParameter("@is_have_experience", user.isHaveExperience.HasValue ? (object)user.isHaveExperience.Value : DBNull.Value),
-        new MySqlParameter("@size_of_residence", user.sizeOfResidence ?? (object)DBNull.Value),
-        new MySqlParameter("@type_of_residence", user.typeOfResidence ?? (object)DBNull.Value),
-        new MySqlParameter("@free_time_per_day", user.freeTimePerDay),
-        new MySqlParameter("@reason_for_adoption", user.reasonForAdoption ?? (object)DBNull.Value),
-        new MySqlParameter("@interest_id_1", user.interestId1.HasValue ? (object)user.interestId1.Value : DBNull.Value),
-        new MySqlParameter("@interest_id_2", user.interestId2.HasValue ? (object)user.interestId2.Value : DBNull.Value),
-        new MySqlParameter("@interest_id_3", user.interestId3.HasValue ? (object)user.interestId3.Value : DBNull.Value),
-        new MySqlParameter("@interest_id_4", user.interestId4.HasValue ? (object)user.interestId4.Value : DBNull.Value),
-        new MySqlParameter("@interest_id_5", user.interestId5.HasValue ? (object)user.interestId5.Value : DBNull.Value),
-        new MySqlParameter("@interest_id_5", user.monthlyIncome.HasValue ? (object)user.monthlyIncome.Value : DBNull.Value),
-        new MySqlParameter("@address", user.address ?? (object)DBNull.Value),
-        new MySqlParameter("@user_id", user.userId)
-    };
+            existingUser.name = userUpdate.Name ?? existingUser.name;
+            existingUser.lastName = userUpdate.LastName ?? existingUser.lastName;
+            existingUser.tel = userUpdate.Tel ?? existingUser.tel;
+            existingUser.gender = userUpdate.Gender ?? existingUser.gender;
+            existingUser.age = userUpdate.Age ?? existingUser.age;
+            existingUser.address = userUpdate.Address ?? existingUser.address;
+            existingUser.career = userUpdate.Career ?? existingUser.career;
+            existingUser.numOfFamMembers = userUpdate.NumOfFamMembers ?? existingUser.numOfFamMembers;
+            existingUser.isHaveExperience = userUpdate.IsHaveExperience ?? existingUser.isHaveExperience;
+            existingUser.sizeOfResidence = userUpdate.SizeOfResidence ?? existingUser.sizeOfResidence;
+            existingUser.typeOfResidence = userUpdate.TypeOfResidence ?? existingUser.typeOfResidence;
+            existingUser.freeTimePerDay = userUpdate.FreeTimePerDay ?? existingUser.freeTimePerDay;
+            existingUser.monthlyIncome = userUpdate.MonthlyIncome ?? existingUser.monthlyIncome;
 
             try
             {
-                await _context.Database.ExecuteSqlRawAsync(sqlQuery, parameters);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "User updated successfully." });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "User update failed.", error = ex.Message });
             }
-
-            return Ok(new { message = "User updated successfully." });
         }
 
         [HttpDelete("{Id}")]
         public async Task<IActionResult> DeleteUser(int Id)
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var user = await _context.Users
-                    .FromSqlRaw(@"
-                SELECT user_id, profile_pic, `name`, lastname, email, `password`, `role`, address, tel, gender, age, career, 
-                num_of_fam_members, is_have_experience, size_of_residence, 
-                type_of_residence, free_time_per_day, reason_for_adoption, interest_id_1, 
-                interest_id_2, interest_id_3, interest_id_4, interest_id_5, monthly_income 
-                FROM user 
-                WHERE user_id = {0}", Id)
-                    .FirstOrDefaultAsync();
+         
+                var notifications = await _context.NotificationAdoptionRequests
+                    .Where(n => n.UserId == Id)
+                    .ToListAsync();
+                if (notifications.Any())
+                {
+                    _context.NotificationAdoptionRequests.RemoveRange(notifications);
+                }
 
+                var requests = await _context.AdoptionRequest
+                    .Where(ar => ar.UserId == Id)
+                    .ToListAsync();
+                if (requests.Any())
+                {
+                    _context.AdoptionRequest.RemoveRange(requests);
+                }
+
+                var posts = await _context.AdoptionPosts
+                    .Where(ap => ap.userId == Id)
+                    .ToListAsync();
+                if (posts.Any())
+                {
+                    _context.AdoptionPosts.RemoveRange(posts);
+                }
+
+    
+                var user = await _context.Users.FindAsync(Id);
                 if (user == null)
                 {
                     return NotFound("User not found.");
                 }
 
-                await _context.Database.ExecuteSqlRawAsync("DELETE FROM user WHERE user_id = {0}", Id);
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
 
-                return NoContent();
+                await transaction.CommitAsync();
+                return Ok(new { message = "User deleted successfully." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "An error occurred while deleting the user.");
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "An error occurred while deleting the user.", error = ex.Message });
             }
         }
-
-
 
         private string ComputeSha256Hash(string rawData)
         {
