@@ -218,7 +218,7 @@ namespace NewLife_Web_api.Controllers
                 // อัปเดต postStatus ใน AdoptionPost เป็น "complete"
                 if (notification.AdoptionRequest.AdoptionPost != null)
                 {
-                    notification.AdoptionRequest.AdoptionPost.adoptionStatus = "complete";
+                    notification.AdoptionRequest.AdoptionPost.adoptionStatus = "pending";
                 }
 
                 // ส่งการแจ้งเตือนไปยังผู้ขอว่าคำขอถูกปฏิเสธ
