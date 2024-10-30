@@ -203,29 +203,26 @@ namespace NewLife_Web_api.Controllers
             {
                 var notification = await _context.NotificationAdoptionRequests
                     .Include(n => n.AdoptionRequest)
-                    .ThenInclude(ar => ar.AdoptionPost) // รวมข้อมูล AdoptionPost
+                    .ThenInclude(ar => ar.AdoptionPost)
                     .FirstOrDefaultAsync(n => n.NotiAdopReqId == notiAdopReqId);
 
                 if (notification == null)
-                {
                     return NotFound("Notification not found.");
-                }
 
-                // อัปเดตสถานะคำขอเป็น 'declined'
+               
                 notification.AdoptionRequest.Status = "declined";
                 notification.IsRead = true;
 
-                // อัปเดต postStatus ใน AdoptionPost เป็น "complete"
+                
                 if (notification.AdoptionRequest.AdoptionPost != null)
                 {
                     notification.AdoptionRequest.AdoptionPost.adoptionStatus = "pending";
                 }
 
-                // ส่งการแจ้งเตือนไปยังผู้ขอว่าคำขอถูกปฏิเสธ
                 var requesterNotification = new NotificationAdoptionRequest
                 {
                     RequestId = notification.RequestId,
-                    UserId = notification.AdoptionRequest.UserId, // แจ้งเตือนผู้ขอ
+                    UserId = notification.AdoptionRequest.UserId,
                     Description = "Your adoption request declined.",
                     IsRead = false,
                     NotiDate = DateTime.Now
@@ -234,7 +231,7 @@ namespace NewLife_Web_api.Controllers
                 _context.NotificationAdoptionRequests.Add(requesterNotification);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Adoption request denied, notifications updated, and post status set to complete." });
+                return Ok(new { message = "Adoption request denied and notifications updated." });
             }
             catch (Exception ex)
             {

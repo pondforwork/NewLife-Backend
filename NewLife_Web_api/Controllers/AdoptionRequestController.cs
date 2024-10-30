@@ -104,9 +104,7 @@ namespace NewLife_Web_api.Controllers
         public async Task<IActionResult> CreateAdoptionRequest([FromBody] AdoptionRequestDto requestDto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -114,9 +112,7 @@ namespace NewLife_Web_api.Controllers
             {
                 var user = await _context.Users.FindAsync(requestDto.UserId);
                 if (user == null)
-                {
                     return NotFound("User not found.");
-                }
 
                 if (requestDto.UpdateUserInfo && requestDto.UserUpdate != null)
                 {
@@ -143,7 +139,7 @@ namespace NewLife_Web_api.Controllers
                     {
                         RequestId = newRequest.RequestId,
                         UserId = adoptionPost.userId,
-                        Description = $"You have new adoption request",
+                        Description = $"New adoption request from {user.name}",
                         IsRead = false,
                         NotiDate = DateTime.Now
                     };
@@ -158,11 +154,9 @@ namespace NewLife_Web_api.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                Console.WriteLine($"Exception: {ex.Message} | {ex.StackTrace}");
-                return StatusCode(500, $"An error occurred: {ex.Message} | {ex.StackTrace}");
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-
 
 
         private void UpdateUserFromDto(User user, UserUpdateDto updateDto)
